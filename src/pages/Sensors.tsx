@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, CheckCircle2, XCircle, Radio } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -69,6 +69,13 @@ function SensorForm({ onSubmit, defaultValues, loading, assets }: {
   );
 }
 
+// Sensor type badge style map for dot colors
+const sensorTypeDotColor: Record<string, string> = {
+  VIBRATION:   '#6366f1',
+  TEMPERATURE: '#f59e0b',
+  COMBINED:    '#10b981',
+};
+
 export function Sensors() {
   const qc = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
@@ -111,39 +118,91 @@ export function Sensors() {
         {isLoading ? (
           <div className="p-6"><SkeletonTable /></div>
         ) : (sensors?.length ?? 0) === 0 ? (
-          <EmptyState title="No sensors yet" description="Add sensors to your assets to start collecting data" action={<Button onClick={() => setCreateOpen(true)}>Add Sensor</Button>} />
+          <EmptyState
+            icon={<Radio className="w-7 h-7" />}
+            title="No sensors yet"
+            description="Add sensors to your assets to start collecting data"
+            action={<Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Sensor</Button>}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
+                <tr
+                  className="border-b border-slate-100"
+                  style={{ background: 'linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.8))' }}
+                >
                   {['Sensor', 'Asset', 'Serial Number', 'Type', 'Status', 'Installed', 'Actions'].map(h => (
-                    <th key={h} className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-5 py-3 first:pl-6">{h}</th>
+                    <th key={h} className="sticky top-0 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-5 py-4 first:pl-6">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
-                {sensors!.map(s => (
-                  <tr key={s.id} className="hover:bg-slate-50 transition-colors group">
-                    <td className="px-6 py-4 font-semibold text-slate-900">{s.name}</td>
-                    <td className="px-5 py-4 text-slate-600">{s.assetName}</td>
-                    <td className="px-5 py-4 font-mono text-xs text-slate-500">{s.serialNumber ?? '—'}</td>
+              <tbody>
+                {sensors!.map((s, idx) => (
+                  <tr
+                    key={s.id}
+                    className="border-b border-slate-50 last:border-0 hover:bg-emerald-50/30 transition-colors group"
+                    style={{ background: idx % 2 === 0 ? 'white' : 'rgba(248,250,252,0.5)' }}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.15))',
+                            border: '1px solid rgba(16,185,129,0.15)',
+                          }}
+                        >
+                          <Radio className="w-3.5 h-3.5 text-emerald-500" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-900">{s.name}</span>
+                          {/* Active indicator dot next to name */}
+                          {s.active && (
+                            <span className="ml-2 inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 align-middle" />
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-slate-600 font-medium">{s.assetName}</td>
                     <td className="px-5 py-4">
-                      <Badge label={sensorTypeLabel[s.sensorType]} className={sensorTypeColors[s.sensorType]} />
+                      {s.serialNumber
+                        ? <code className="font-mono text-[12px] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">{s.serialNumber}</code>
+                        : <span className="text-slate-300">—</span>
+                      }
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ background: sensorTypeDotColor[s.sensorType] ?? '#94a3b8' }}
+                        />
+                        <Badge dot={false} label={sensorTypeLabel[s.sensorType]} className={sensorTypeColors[s.sensorType]} />
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       {s.active
-                        ? <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full"><CheckCircle2 className="w-3 h-3" />Active</span>
-                        : <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full"><XCircle className="w-3 h-3" />Inactive</span>
+                        ? <span
+                            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                            style={{ color: '#047857', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }}
+                          >
+                            <CheckCircle2 className="w-3 h-3" />Active
+                          </span>
+                        : <span
+                            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                            style={{ color: '#64748b', background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)' }}
+                          >
+                            <XCircle className="w-3 h-3" />Inactive
+                          </span>
                       }
                     </td>
-                    <td className="px-5 py-4 text-slate-500 whitespace-nowrap">{formatDate(s.installedAt)}</td>
+                    <td className="px-5 py-4 text-slate-500 whitespace-nowrap text-[12px] font-medium">{formatDate(s.installedAt)}</td>
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => setEditSensor(s)} className="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                      <div className="flex items-center gap-1.5">
+                        <button onClick={() => setEditSensor(s)} className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-150" title="Edit">
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => setDeleteId(s.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                        <button onClick={() => setDeleteId(s.id)} className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150" title="Delete">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>

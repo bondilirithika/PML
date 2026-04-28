@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, MapPin, Tag, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, Tag, CheckCircle2, XCircle, Server } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -86,7 +86,7 @@ export function Assets() {
     <>
       <PageHeader
         title="Assets"
-        subtitle={`${assets?.length ?? 0} assets registered`}
+        subtitle={`${assets?.length ?? 0} industrial assets registered`}
         action={
           <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
             New Asset
@@ -99,61 +99,98 @@ export function Assets() {
           <div className="p-6"><SkeletonTable /></div>
         ) : (assets?.length ?? 0) === 0 ? (
           <EmptyState
+            icon={<Server className="w-7 h-7" />}
             title="No assets yet"
             description="Add your first piece of equipment to start monitoring"
-            action={<Button onClick={() => setCreateOpen(true)}>Add Asset</Button>}
+            action={<Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Asset</Button>}
           />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
+                <tr
+                  className="border-b border-slate-100"
+                  style={{ background: 'linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.8))' }}
+                >
                   {['Name', 'Type', 'Location', 'Status', 'Actions'].map(h => (
-                    <th key={h} className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-5 py-3 first:pl-6">{h}</th>
+                    <th key={h} className="sticky top-0 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-5 py-4 first:pl-6">
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
-                {assets!.map(asset => (
-                  <tr key={asset.id} className="hover:bg-slate-50 transition-colors group">
+              <tbody>
+                {assets!.map((asset, idx) => (
+                  <tr
+                    key={asset.id}
+                    className="border-b border-slate-50 last:border-0 hover:bg-indigo-50/30 transition-colors group"
+                    style={{ background: idx % 2 === 0 ? 'white' : 'rgba(248,250,252,0.5)' }}
+                  >
                     <td className="px-6 py-4">
-                      <p className="font-semibold text-slate-900">{asset.name}</p>
-                      {asset.description && <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[200px]">{asset.description}</p>}
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.15))', border: '1px solid rgba(99,102,241,0.12)' }}
+                        >
+                          <Server className="w-3.5 h-3.5 text-indigo-500" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900">{asset.name}</p>
+                          {asset.description && <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[200px]">{asset.description}</p>}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       {asset.assetType ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                        <span
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                          style={{
+                            color: '#6d28d9',
+                            background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(109,40,217,0.08))',
+                            border: '1px solid rgba(139,92,246,0.2)',
+                          }}
+                        >
                           <Tag className="w-3 h-3" />{asset.assetType}
                         </span>
-                      ) : <span className="text-slate-400">—</span>}
+                      ) : <span className="text-slate-300 text-sm">—</span>}
                     </td>
                     <td className="px-5 py-4">
                       {asset.location ? (
-                        <span className="flex items-center gap-1 text-slate-600"><MapPin className="w-3.5 h-3.5 text-slate-400" />{asset.location}</span>
-                      ) : <span className="text-slate-400">—</span>}
+                        <span className="flex items-center gap-1.5 text-slate-600 font-medium text-[13px]">
+                          <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />{asset.location}
+                        </span>
+                      ) : <span className="text-slate-300 text-sm">—</span>}
                     </td>
                     <td className="px-5 py-4">
                       {asset.active ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                        <span
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                          style={{ color: '#047857', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }}
+                        >
                           <CheckCircle2 className="w-3 h-3" />Active
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full">
+                        <span
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                          style={{ color: '#64748b', background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)' }}
+                        >
                           <XCircle className="w-3 h-3" />Inactive
                         </span>
                       )}
                     </td>
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => setEditAsset(asset)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                          className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-150"
+                          title="Edit"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => setDeleteId(asset.id)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150"
+                          title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

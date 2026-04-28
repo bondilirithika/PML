@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, SlidersHorizontal } from 'lucide-react';
+import { Plus, Pencil, Trash2, SlidersHorizontal, Thermometer, Activity } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -95,7 +95,7 @@ export function Thresholds() {
     <>
       <PageHeader
         title="Thresholds"
-        subtitle="Configure alert limits per asset"
+        subtitle="Configure RMS and temperature alert limits per asset"
         action={
           <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
             New Threshold
@@ -107,38 +107,85 @@ export function Thresholds() {
         {isLoading ? (
           <div className="p-6"><SkeletonTable /></div>
         ) : (thresholds?.length ?? 0) === 0 ? (
-          <EmptyState icon={<SlidersHorizontal className="w-6 h-6" />} title="No thresholds configured" description="Set RMS and temperature limits for your assets" action={<Button onClick={() => setCreateOpen(true)}>Add Threshold</Button>} />
+          <EmptyState
+            icon={<SlidersHorizontal className="w-7 h-7" />}
+            title="No thresholds configured"
+            description="Set RMS and temperature limits to auto-generate tickets on breaches"
+            action={<Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Threshold</Button>}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
+                <tr
+                  className="border-b border-slate-100"
+                  style={{ background: 'linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.8))' }}
+                >
                   {['Asset', 'Max RMS (mm/s)', 'Max Temperature (°C)', 'Last Updated', 'Actions'].map(h => (
-                    <th key={h} className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-5 py-3 first:pl-6">{h}</th>
+                    <th key={h} className="sticky top-0 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-5 py-4 first:pl-6">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
-                {thresholds!.map(t => (
-                  <tr key={t.id} className="hover:bg-slate-50 transition-colors group">
-                    <td className="px-6 py-4 font-semibold text-slate-900">{t.assetName}</td>
-                    <td className="px-5 py-4">
-                      <span className="inline-flex items-center gap-1.5 font-semibold text-violet-700 bg-violet-50 px-3 py-1 rounded-full text-sm">
-                        {t.rmsMax} mm/s
-                      </span>
+              <tbody>
+                {thresholds!.map((t, idx) => (
+                  <tr
+                    key={t.id}
+                    className="border-b border-slate-50 last:border-0 hover:bg-indigo-50/30 transition-colors group"
+                    style={{ background: idx % 2 === 0 ? 'white' : 'rgba(248,250,252,0.5)' }}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.15))',
+                            border: '1px solid rgba(99,102,241,0.12)',
+                          }}
+                        >
+                          <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-500" />
+                        </div>
+                        <span className="font-bold text-slate-900">{t.assetName}</span>
+                      </div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="inline-flex items-center gap-1.5 font-semibold text-orange-700 bg-orange-50 px-3 py-1 rounded-full text-sm">
-                        {t.tempMax}°C
-                      </span>
+                      <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(109,40,217,0.06), rgba(99,102,241,0.08))', border: '1px solid rgba(99,102,241,0.15)' }}>
+                        <div
+                          className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}
+                        >
+                          <Activity className="w-3 h-3 text-white" />
+                        </div>
+                        <span className="font-black text-violet-700 text-base tabular-nums">{t.rmsMax}</span>
+                        <span className="text-xs font-bold text-violet-400">mm/s</span>
+                      </div>
                     </td>
-                    <td className="px-5 py-4 text-slate-500">{formatDate(t.updatedAt)}</td>
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => setEditThreshold(t)} className="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                      <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.06), rgba(217,119,6,0.08))', border: '1px solid rgba(245,158,11,0.2)' }}>
+                        <div
+                          className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
+                        >
+                          <Thermometer className="w-3 h-3 text-white" />
+                        </div>
+                        <span className="font-black text-amber-700 text-base tabular-nums">{t.tempMax}</span>
+                        <span className="text-xs font-bold text-amber-400">°C</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-slate-500 text-[12px] font-medium">{formatDate(t.updatedAt)}</td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setEditThreshold(t)}
+                          className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-150"
+                          title="Edit"
+                        >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => setDeleteId(t.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                        <button
+                          onClick={() => setDeleteId(t.id)}
+                          className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150"
+                          title="Delete"
+                        >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>

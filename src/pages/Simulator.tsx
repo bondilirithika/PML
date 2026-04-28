@@ -11,7 +11,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { PageHeader } from '../components/ui/PageHeader';
-import { Radio, CheckCircle2, AlertTriangle, Zap } from 'lucide-react';
+import { Radio, CheckCircle2, AlertTriangle, Zap, Cpu, ChevronRight } from 'lucide-react';
 import { formatDate, formatRms, formatTemp } from '../utils/formatters';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -31,31 +31,48 @@ interface ResultCardProps {
 
 function ResultCard({ reading }: ResultCardProps) {
   return (
-    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 animate-slide-in">
-      <div className="flex items-center gap-2 mb-3">
-        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-        <p className="text-sm font-semibold text-emerald-800">Payload processed successfully</p>
+    <div
+      className="rounded-2xl border p-5 animate-slide-up"
+      style={{
+        background: 'linear-gradient(135deg, rgba(209,250,229,0.7), rgba(167,243,208,0.4))',
+        borderColor: 'rgba(16,185,129,0.28)',
+        boxShadow: '0 4px 20px rgba(16,185,129,0.12)',
+      }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #059669, #10b981)', boxShadow: '0 3px 10px rgba(16,185,129,0.35)' }}
+        >
+          <CheckCircle2 className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <p className="text-sm font-extrabold text-emerald-800">Payload processed successfully</p>
+          <p className="text-xs text-emerald-600 font-medium mt-0.5">Reading stored & threshold evaluated</p>
+        </div>
       </div>
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        <div>
-          <p className="text-xs text-emerald-600 font-medium uppercase tracking-wide mb-0.5">Reading ID</p>
-          <p className="font-semibold text-slate-900">#{reading.id}</p>
-        </div>
-        <div>
-          <p className="text-xs text-emerald-600 font-medium uppercase tracking-wide mb-0.5">Asset</p>
-          <p className="font-semibold text-slate-900">{reading.assetName}</p>
-        </div>
-        <div>
-          <p className="text-xs text-emerald-600 font-medium uppercase tracking-wide mb-0.5">RMS</p>
-          <p className="font-semibold text-slate-900">{formatRms(reading.rms)} mm/s</p>
-        </div>
-        <div>
-          <p className="text-xs text-emerald-600 font-medium uppercase tracking-wide mb-0.5">Temperature</p>
-          <p className="font-semibold text-slate-900">{formatTemp(reading.temperature)}</p>
-        </div>
-        <div className="col-span-2">
-          <p className="text-xs text-emerald-600 font-medium uppercase tracking-wide mb-0.5">Timestamp</p>
-          <p className="font-semibold text-slate-900">{formatDate(reading.timestamp)}</p>
+      <div className="grid grid-cols-2 gap-2.5">
+        {[
+          { label: 'Reading ID', value: `#${reading.id}` },
+          { label: 'Asset',      value: reading.assetName },
+          { label: 'RMS',        value: `${formatRms(reading.rms)} mm/s` },
+          { label: 'Temperature',value: formatTemp(reading.temperature) },
+        ].map(({ label, value }) => (
+          <div
+            key={label}
+            className="rounded-xl p-3"
+            style={{ background: 'rgba(255,255,255,0.65)', border: '1px solid rgba(16,185,129,0.15)' }}
+          >
+            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">{label}</p>
+            <p className="font-bold text-slate-900 text-sm">{value}</p>
+          </div>
+        ))}
+        <div
+          className="col-span-2 rounded-xl p-3"
+          style={{ background: 'rgba(255,255,255,0.65)', border: '1px solid rgba(16,185,129,0.15)' }}
+        >
+          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Timestamp</p>
+          <p className="font-bold text-slate-900 text-sm">{formatDate(reading.timestamp)}</p>
         </div>
       </div>
     </div>
@@ -86,6 +103,8 @@ export function Simulator() {
 
   const currentRms  = Number(watch('rms'))  || 0;
   const currentTemp = Number(watch('temp')) || 0;
+  const willBreach  = currentRms > 5 || currentTemp > 95;
+  const hasValues   = currentRms > 0 || currentTemp > 0;
 
   return (
     <>
@@ -100,12 +119,31 @@ export function Simulator() {
           <CardHeader
             title="Publish Device Payload"
             subtitle="Simulates a reading arriving from a real IoT device"
-            action={<Radio className="w-4 h-4 text-slate-400" />}
+            action={
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  boxShadow: '0 3px 10px rgba(99,102,241,0.35)',
+                }}
+              >
+                <Radio className="w-4 h-4 text-white" />
+              </div>
+            }
           />
 
           {/* Quick fill from sensor */}
-          <div className="mb-5 p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Quick Fill</p>
+          <div
+            className="mb-5 p-4 rounded-xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(248,250,252,0.9), rgba(241,245,249,0.7))',
+              border: '1px solid rgba(226,232,240,0.8)',
+            }}
+          >
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+              <Zap className="w-3 h-3 text-indigo-400" />
+              Quick Fill from Sensor
+            </p>
             <Select
               options={sensors.map(s => ({ value: String(s.id), label: `${s.name} — ${s.serialNumber ?? 'no serial'} (${s.assetName})` }))}
               placeholder="Select a sensor to auto-fill deviceId..."
@@ -145,21 +183,57 @@ export function Simulator() {
             />
 
             {/* Live breach indicator */}
-            {(currentRms > 0 || currentTemp > 0) && (
-              <div className={clsx(
-                'flex items-center gap-2 text-sm rounded-lg p-3',
-                currentRms > 5 || currentTemp > 95
-                  ? 'bg-red-50 text-red-700 border border-red-200'
-                  : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              )}>
-                {currentRms > 5 || currentTemp > 95
-                  ? <><AlertTriangle className="w-4 h-4 flex-shrink-0" /> This reading will breach typical thresholds and trigger a ticket</>
-                  : <><CheckCircle2 className="w-4 h-4 flex-shrink-0" /> This reading looks normal — unlikely to trigger a ticket</>
-                }
+            {hasValues && (
+              <div
+                className={clsx(
+                  'flex items-center gap-3 text-sm rounded-xl p-4 transition-all duration-300',
+                  willBreach ? 'border border-red-200' : 'border border-emerald-200'
+                )}
+                style={{
+                  background: willBreach
+                    ? 'linear-gradient(135deg, rgba(254,226,226,0.7), rgba(252,165,165,0.25))'
+                    : 'linear-gradient(135deg, rgba(209,250,229,0.7), rgba(167,243,208,0.25))',
+                }}
+              >
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{
+                    background: willBreach
+                      ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                      : 'linear-gradient(135deg, #059669, #10b981)',
+                    boxShadow: willBreach
+                      ? '0 3px 8px rgba(239,68,68,0.30)'
+                      : '0 3px 8px rgba(16,185,129,0.30)',
+                  }}
+                >
+                  {willBreach
+                    ? <AlertTriangle className="w-4 h-4 text-white" />
+                    : <CheckCircle2 className="w-4 h-4 text-white" />
+                  }
+                </div>
+                <div>
+                  {willBreach ? (
+                    <>
+                      <p className="font-extrabold text-red-700 text-sm">Threshold breach expected</p>
+                      <p className="text-xs text-red-500 font-medium mt-0.5">A maintenance ticket will be auto-created</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-extrabold text-emerald-700 text-sm">Reading looks normal</p>
+                      <p className="text-xs text-emerald-500 font-medium mt-0.5">Unlikely to trigger a ticket</p>
+                    </>
+                  )}
+                </div>
               </div>
             )}
 
-            <Button type="submit" loading={mutation.isPending} icon={<Zap className="w-4 h-4" />} className="w-full">
+            <Button
+              type="submit"
+              loading={mutation.isPending}
+              icon={<Zap className="w-4 h-4" />}
+              className="w-full"
+              size="lg"
+            >
               Publish Payload
             </Button>
           </form>
@@ -171,44 +245,92 @@ export function Simulator() {
 
           <Card>
             <CardHeader title="How it works" subtitle="Azure IoT Hub / AWS IoT Core simulation" />
-            <div className="space-y-3 text-sm text-slate-600">
-              <div className="flex gap-3">
-                <span className="w-6 h-6 rounded-full bg-primary-100 text-primary-700 text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
-                <p>Your IoT device sends a payload with <code className="bg-slate-100 px-1 rounded text-xs">deviceId</code>, <code className="bg-slate-100 px-1 rounded text-xs">rms</code>, <code className="bg-slate-100 px-1 rounded text-xs">temp</code>, <code className="bg-slate-100 px-1 rounded text-xs">ts</code></p>
-              </div>
-              <div className="flex gap-3">
-                <span className="w-6 h-6 rounded-full bg-primary-100 text-primary-700 text-xs font-bold flex items-center justify-center flex-shrink-0">2</span>
-                <p><code className="bg-slate-100 px-1 rounded text-xs">deviceId</code> maps to <code className="bg-slate-100 px-1 rounded text-xs">sensor.serialNumber</code> in the database</p>
-              </div>
-              <div className="flex gap-3">
-                <span className="w-6 h-6 rounded-full bg-primary-100 text-primary-700 text-xs font-bold flex items-center justify-center flex-shrink-0">3</span>
-                <p>The reading is saved and immediately evaluated against the asset's threshold</p>
-              </div>
-              <div className="flex gap-3">
-                <span className="w-6 h-6 rounded-full bg-primary-100 text-primary-700 text-xs font-bold flex items-center justify-center flex-shrink-0">4</span>
-                <p>If RMS {'>'} rmsMax <strong>or</strong> Temp {'>'} tempMax → a maintenance ticket is auto-created</p>
-              </div>
+            <div className="space-y-3">
+              {[
+                {
+                  step: '1',
+                  text: <>Your IoT device sends a payload with <code className="bg-slate-100 px-1.5 py-0.5 rounded-lg text-[11px] font-mono font-bold text-indigo-600">deviceId</code>, <code className="bg-slate-100 px-1.5 py-0.5 rounded-lg text-[11px] font-mono font-bold text-indigo-600">rms</code>, <code className="bg-slate-100 px-1.5 py-0.5 rounded-lg text-[11px] font-mono font-bold text-indigo-600">temp</code>, <code className="bg-slate-100 px-1.5 py-0.5 rounded-lg text-[11px] font-mono font-bold text-indigo-600">ts</code></>,
+                },
+                {
+                  step: '2',
+                  text: <><code className="bg-slate-100 px-1.5 py-0.5 rounded-lg text-[11px] font-mono font-bold text-indigo-600">deviceId</code> maps to <code className="bg-slate-100 px-1.5 py-0.5 rounded-lg text-[11px] font-mono font-bold text-indigo-600">sensor.serialNumber</code> in the database</>,
+                },
+                {
+                  step: '3',
+                  text: "The reading is saved and immediately evaluated against the asset's threshold",
+                },
+                {
+                  step: '4',
+                  text: 'If RMS > rmsMax or Temp > tempMax → a maintenance ticket is auto-created',
+                },
+              ].map(({ step, text }) => (
+                <div key={step} className="flex gap-3 items-start">
+                  <div
+                    className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 text-[11px] font-black text-white"
+                    style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 2px 6px rgba(99,102,241,0.3)' }}
+                  >
+                    {step}
+                  </div>
+                  <p className="text-sm text-slate-600 leading-relaxed pt-0.5">{text}</p>
+                </div>
+              ))}
             </div>
           </Card>
 
           <Card>
-            <CardHeader title="Active Sensors" subtitle="Registered serial numbers" />
-            <div className="space-y-2">
+            <CardHeader
+              title="Active Sensors"
+              subtitle="Registered serial numbers — click to use"
+              action={
+                <div
+                  className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.15))', border: '1px solid rgba(16,185,129,0.2)' }}
+                >
+                  <Cpu className="w-3.5 h-3.5 text-emerald-500" />
+                </div>
+              }
+            />
+            <div className="space-y-1.5">
               {sensors.filter(s => s.active && s.serialNumber).map(s => (
-                <div key={s.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium text-slate-800">{s.name}</p>
-                    <p className="text-xs text-slate-500">{s.assetName}</p>
+                <div
+                  key={s.id}
+                  className="flex items-center justify-between py-2.5 px-3 rounded-xl transition-all duration-150 cursor-pointer group"
+                  style={{ border: '1px solid transparent' }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLDivElement).style.background = 'rgba(248,250,252,0.8)';
+                    (e.currentTarget as HTMLDivElement).style.border = '1px solid rgba(226,232,240,0.8)';
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLDivElement).style.background = 'transparent';
+                    (e.currentTarget as HTMLDivElement).style.border = '1px solid transparent';
+                  }}
+                  onClick={() => setValue('deviceId', s.serialNumber!)}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">{s.name}</p>
+                      <p className="text-xs text-slate-400 font-medium">{s.assetName}</p>
+                    </div>
                   </div>
-                  <code
-                    className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded cursor-pointer hover:bg-primary-50 hover:text-primary-700 transition-colors"
-                    onClick={() => setValue('deviceId', s.serialNumber!)}
-                    title="Click to use this serial number"
-                  >
-                    {s.serialNumber}
-                  </code>
+                  <div className="flex items-center gap-1.5">
+                    <code
+                      className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-xl"
+                      style={{
+                        color: '#6366f1',
+                        background: 'rgba(99,102,241,0.08)',
+                        border: '1px solid rgba(99,102,241,0.15)',
+                      }}
+                    >
+                      {s.serialNumber}
+                    </code>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-400 transition-colors" />
+                  </div>
                 </div>
               ))}
+              {sensors.filter(s => s.active && s.serialNumber).length === 0 && (
+                <p className="text-sm text-slate-400 text-center py-4 font-medium">No sensors with serial numbers</p>
+              )}
             </div>
           </Card>
         </div>

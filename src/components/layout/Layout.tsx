@@ -4,11 +4,11 @@ import { Header } from './Header';
 
 export function Layout() {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen" style={{ background: '#f8fafc' }}>
       <Sidebar />
       <Header />
-      <main className="ml-60 pt-16 min-h-screen">
-        <div className="p-8 animate-fade-in">
+      <main className="ml-[232px] pt-[65px] min-h-screen">
+        <div className="p-7 animate-fade-in">
           <Outlet />
         </div>
       </main>

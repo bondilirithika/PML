@@ -3,16 +3,20 @@ import { clsx } from 'clsx';
 interface BadgeProps {
   label: string;
   className?: string;
+  dot?: boolean;
 }
 
-export function Badge({ label, className }: BadgeProps) {
+export function Badge({ label, className, dot }: BadgeProps) {
   return (
     <span
       className={clsx(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border tracking-wide',
         className
       )}
     >
+      {dot && (
+        <span className="w-1.5 h-1.5 rounded-full bg-current opacity-90 flex-shrink-0" />
+      )}
       {label}
     </span>
   );
