@@ -43,25 +43,21 @@ export function Login() {
   return (
     <div className="min-h-screen flex" style={{ background: '#f8fafc' }}>
 
-      {/* ── LEFT — Dark branding panel ──────────────────────────────────── */}
       <div
         className="hidden lg:flex lg:w-[52%] flex-col justify-between p-12 relative overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)' }}
       >
-        {/* Mesh gradient orbs */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-80px] left-[-80px] w-[400px] h-[400px] rounded-full opacity-20"
             style={{ background: 'radial-gradient(circle, #6366f1, transparent 70%)' }} />
           <div className="absolute bottom-[-60px] right-[-60px] w-[350px] h-[350px] rounded-full opacity-15"
             style={{ background: 'radial-gradient(circle, #8b5cf6, transparent 70%)' }} />
         </div>
-        {/* Grid overlay */}
         <div className="absolute inset-0 opacity-[0.04]" style={{
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
           backgroundSize: '40px 40px',
         }} />
 
-        {/* Brand */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
             <div
@@ -88,7 +84,6 @@ export function Login() {
           </p>
         </div>
 
-        {/* Features */}
         <div className="relative z-10 space-y-4">
           {[
             { icon: Activity, text: 'Real-time vibration & temperature monitoring' },
@@ -105,17 +100,14 @@ export function Login() {
           ))}
         </div>
 
-        {/* Footer */}
         <div className="relative z-10">
           <p className="text-slate-600 text-xs">© 2026 PML · All rights reserved</p>
         </div>
       </div>
 
-      {/* ── RIGHT — Login form panel ─────────────────────────────────────── */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-[400px]">
 
-          {/* Mobile brand */}
           <div className="flex items-center gap-2.5 mb-10 lg:hidden">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>

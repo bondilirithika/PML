@@ -9,7 +9,6 @@ export function Layout() {
 
   return (
     <div className="min-h-screen" style={{ background: '#f8fafc' }}>
-      {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm lg:hidden"
@@ -19,7 +18,6 @@ export function Layout() {
 
       <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(o => !o)} />
 
-      {/* Floating reopen tab — only when sidebar is collapsed */}
       {!sidebarOpen && (
         <button
           onClick={() => setSidebarOpen(true)}

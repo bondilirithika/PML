@@ -28,10 +28,8 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public */}
             <Route path="/login" element={<Login />} />
 
-            {/* Protected — all wrapped in ProtectedRoute → Layout */}
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
                 <Route index           element={<Dashboard />} />

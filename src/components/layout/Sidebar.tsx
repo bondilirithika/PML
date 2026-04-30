@@ -73,7 +73,6 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
       )}
       style={{ background: '#0f172a', borderRight: '1px solid rgba(255,255,255,0.05)' }}
     >
-      {/* Brand row */}
       <div
         className="flex items-center justify-between px-5 h-[65px] flex-shrink-0"
         style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
@@ -105,19 +104,16 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
         </button>
       </div>
 
-      {/* Decorative gradient bar */}
       <div
         className="h-px flex-shrink-0 opacity-20"
         style={{ background: 'linear-gradient(90deg, transparent, #6366f1, #8b5cf6, transparent)' }}
       />
 
-      {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 pt-6">
         <NavSection items={mainNav}    label="Overview" />
         <NavSection items={monitorNav} label="Monitor" canWrite={canWrite} />
       </nav>
 
-      {/* Bottom — sign out only */}
       <div className="mx-3 mb-5 flex-shrink-0">
         <button
           onClick={logout}

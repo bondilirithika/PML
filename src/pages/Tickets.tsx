@@ -41,8 +41,6 @@ export function Tickets() {
 
   const { data: assets = [] } = useQuery({ queryKey: ['assets'], queryFn: assetsApi.getAll });
 
-  // When an asset is selected use the by-asset endpoint (flat list).
-  // Otherwise use the paginated endpoint.
   const assetSelected = assetFilter !== '';
 
   const { data: pagedData, isLoading: pagedLoading } = useQuery({
@@ -59,12 +57,10 @@ export function Tickets() {
 
   const isLoading = assetSelected ? assetLoading : pagedLoading;
 
-  // Base ticket list for the current view
   const baseTickets: Ticket[] = assetSelected
     ? (assetTickets ?? [])
     : (pagedData?.content ?? []);
 
-  // Apply status filter on top
   const filtered = statusFilter
     ? baseTickets.filter(t => t.status === statusFilter)
     : baseTickets;
@@ -96,7 +92,6 @@ export function Tickets() {
         subtitle={`${totalCount} ${statusFilter ? ticketStatusLabel[statusFilter].toLowerCase() : 'total'} tickets${assetSelected ? ` · ${assets.find(a => a.id === assetFilter)?.name ?? ''}` : ''}`}
         action={
           <div className="flex items-center gap-2">
-            {/* Filter bar */}
             <div
               className="flex items-center gap-0 rounded-xl overflow-hidden"
               style={{ background: 'white', border: '1px solid rgba(226,232,240,0.8)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
@@ -127,7 +122,6 @@ export function Tickets() {
               </div>
             </div>
 
-            {/* Clear filters badge */}
             {activeFilters > 0 && (
               <button
                 onClick={clearFilters}
@@ -237,7 +231,6 @@ export function Tickets() {
               </table>
             </div>
 
-            {/* Pagination — only shown when no asset filter */}
             {!assetSelected && (
               <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between"
                 style={{ background: 'rgba(248,250,252,0.6)' }}>

@@ -10,7 +10,6 @@ const apiClient = axios.create({
   timeout: 15000,
 });
 
-// ─── Request interceptor — attach JWT ─────────────────────────────────────────
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
@@ -19,7 +18,6 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// ─── Response interceptor ─────────────────────────────────────────────────────
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -27,7 +25,6 @@ apiClient.interceptors.response.use(
     const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
 
     if (status === 401) {
-      // Token expired or invalid — force logout
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
       window.location.href = '/login';

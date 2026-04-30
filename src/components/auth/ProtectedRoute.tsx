@@ -5,7 +5,6 @@ export function ProtectedRoute() {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    // Show a full-page spinner while checking localStorage
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f172a' }}>
         <div className="flex flex-col items-center gap-4">

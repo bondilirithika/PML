@@ -19,8 +19,6 @@ import {
 } from 'recharts';
 import { format, parseISO, subDays } from 'date-fns';
 
-// ─── Custom breach dot ────────────────────────────────────────────────────────
-
 interface BreachDotProps {
   cx?: number;
   cy?: number;
@@ -36,8 +34,6 @@ function BreachDot({ cx = 0, cy = 0, value = 0, threshold }: BreachDotProps) {
   );
 }
 
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
-
 function ChartTooltip({ active, payload, label, unit }: { active?: boolean; payload?: { value: number }[]; label?: string; unit: string }) {
   if (!active || !payload?.length) return null;
   return (
@@ -50,8 +46,6 @@ function ChartTooltip({ active, payload, label, unit }: { active?: boolean; payl
     </div>
   );
 }
-
-// ─── Readings page ────────────────────────────────────────────────────────────
 
 const defaultFrom = format(subDays(new Date(), 7), "yyyy-MM-dd'T'HH:mm");
 const defaultTo   = format(new Date(),              "yyyy-MM-dd'T'HH:mm");
@@ -116,7 +110,6 @@ export function Readings() {
         subtitle="Sensor telemetry — vibration and temperature trends"
       />
 
-      {/* Filter bar */}
       <div
         className="rounded-2xl border border-slate-100 p-5 mb-6"
         style={{ background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 8px 24px rgba(0,0,0,0.04)' }}
@@ -168,7 +161,6 @@ export function Readings() {
           </Button>
         </div>
 
-        {/* Threshold info strip */}
         {threshold && (
           <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-6">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
@@ -210,9 +202,7 @@ export function Readings() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {/* Charts */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* RMS Chart */}
             <Card>
               <CardHeader
                 title="RMS Vibration Trend"
@@ -278,7 +268,6 @@ export function Readings() {
               )}
             </Card>
 
-            {/* Temperature Chart */}
             <Card>
               <CardHeader
                 title="Temperature Trend"
@@ -345,7 +334,6 @@ export function Readings() {
             </Card>
           </div>
 
-          {/* Raw Readings table */}
           <Card padding={false}>
             <div
               className="px-6 py-4 border-b border-slate-100 flex items-center justify-between"
@@ -463,7 +451,6 @@ export function Readings() {
                   </table>
                 </div>
 
-                {/* Pagination */}
                 <div
                   className="px-6 py-4 border-t border-slate-100 flex items-center justify-between"
                   style={{ background: 'rgba(248,250,252,0.6)' }}

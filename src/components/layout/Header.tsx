@@ -36,7 +36,6 @@ export function Header({ sidebarOpen }: HeaderProps) {
       className="fixed top-0 right-0 h-[65px] z-20 flex items-center justify-between px-6 glass-header transition-all duration-300"
       style={{ left: sidebarOpen ? 232 : 0 }}
     >
-      {/* Left — breadcrumb */}
       <div>
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-[11px] font-semibold text-slate-400">PML</span>
@@ -48,17 +47,14 @@ export function Header({ sidebarOpen }: HeaderProps) {
         </h2>
       </div>
 
-      {/* Right — avatar only */}
       <div
         className="flex items-center gap-2.5 group cursor-default select-none"
         title={`${user?.username} · ${isAdmin ? 'Admin' : isManager ? 'Manager' : 'Technician'}`}
       >
-        {/* Username — subtle, hidden on small screens */}
         <span className="hidden sm:block text-[13px] font-semibold text-slate-500 group-hover:text-slate-700 transition-colors">
           {user?.username}
         </span>
 
-        {/* Avatar circle */}
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[13px] font-black flex-shrink-0 transition-all duration-200"
           style={{

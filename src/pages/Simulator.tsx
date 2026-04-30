@@ -95,7 +95,6 @@ export function Simulator() {
     mutationFn: (d: IoTPayloadRequest) => simulatorApi.publish(d),
     onSuccess: (reading) => {
       setLastReading(reading);
-      // A breach reading may have auto-created a ticket — refresh dashboard counts immediately
       qc.invalidateQueries({ queryKey: ['tickets'] });
       qc.invalidateQueries({ queryKey: ['assets', 'violations'] });
       toast.success('IoT payload published and evaluated');
@@ -141,7 +140,6 @@ export function Simulator() {
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Publish Form */}
         <Card>
           <CardHeader
             title="Publish Device Payload"
@@ -159,7 +157,6 @@ export function Simulator() {
             }
           />
 
-          {/* Quick fill from sensor */}
           <div
             className="mb-5 p-4 rounded-xl"
             style={{
@@ -209,7 +206,6 @@ export function Simulator() {
               {...register('ts')}
             />
 
-            {/* Live breach indicator */}
             {hasValues && (
               <div
                 className={clsx(
@@ -266,7 +262,6 @@ export function Simulator() {
           </form>
         </Card>
 
-        {/* Result / Reference panel */}
         <div className="space-y-5">
           {lastReading && <ResultCard reading={lastReading} />}
 

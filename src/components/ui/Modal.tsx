@@ -30,7 +30,6 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="absolute inset-0"
         style={{
@@ -41,7 +40,6 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
         onClick={onClose}
       />
 
-      {/* Panel */}
       <div
         className={clsx(
           'relative w-full bg-white rounded-2xl z-10 overflow-hidden',
@@ -52,13 +50,11 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
           boxShadow: '0 25px 60px -12px rgba(0,0,0,0.45), 0 0 0 1px rgba(99,102,241,0.1)',
         }}
       >
-        {/* Gradient top accent strip */}
         <div
           className="absolute top-0 left-0 right-0 h-[3px]"
           style={{ background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa)' }}
         />
 
-        {/* Header */}
         <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-slate-100">
           <div className="flex items-start gap-3">
             <div
@@ -83,10 +79,8 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
           </button>
         </div>
 
-        {/* Body */}
         <div className="px-6 py-5">{children}</div>
 
-        {/* Footer */}
         {footer && (
           <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-end gap-3">
             {footer}

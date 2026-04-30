@@ -23,8 +23,6 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
-// ─── Sensor type helpers ──────────────────────────────────────────────────────
-
 const sensorTypeLabel: Record<string, string> = {
   VIBRATION:   'Vibration',
   TEMPERATURE: 'Temperature',
@@ -36,8 +34,6 @@ const sensorTypeStyle: Record<string, { bg: string; color: string; border: strin
   TEMPERATURE: { bg: 'rgba(245,158,11,0.08)',  color: '#d97706', border: 'rgba(245,158,11,0.2)',  dot: '#f59e0b' },
   COMBINED:    { bg: 'rgba(16,185,129,0.08)',  color: '#059669', border: 'rgba(16,185,129,0.2)',  dot: '#10b981' },
 };
-
-// ─── Sensor form (no asset dropdown — asset is fixed from context) ────────────
 
 const sensorSchema = z.object({
   name:         z.string().min(1, 'Name is required').max(100),
@@ -90,8 +86,6 @@ function SensorForm({ onSubmit, defaultValues, loading, onCancel, isEdit }: {
     </form>
   );
 }
-
-// ─── Threshold section (shared by create + edit forms) ───────────────────────
 
 const assetThresholdSchema = z.object({
   name:        z.string().min(1, 'Name is required').max(100),
@@ -179,24 +173,19 @@ function EditAssetForm({ onSubmit, defaultValues, loading }: {
   );
 }
 
-// ─── Assets page ──────────────────────────────────────────────────────────────
-
 export function Assets() {
   const qc = useQueryClient();
   const { canWrite, canDelete } = useAuth();
 
-  // ── Asset / threshold modal state ─────────────────────────────────────────
   const [createOpen, setCreateOpen] = useState(false);
   const [editAsset,  setEditAsset]  = useState<Asset | null>(null);
   const [deleteId,   setDeleteId]   = useState<number | null>(null);
 
-  // ── Sensor management modal state ─────────────────────────────────────────
   const [managingAsset,   setManagingAsset]   = useState<Asset | null>(null);
   const [showSensorForm,  setShowSensorForm]  = useState(false);
   const [editingSensor,   setEditingSensor]   = useState<Sensor | null>(null);
   const [deleteSensorId,  setDeleteSensorId]  = useState<number | null>(null);
 
-  // ── Queries ───────────────────────────────────────────────────────────────
   const { data: assets,     isLoading } = useQuery({ queryKey: ['assets'],     queryFn: assetsApi.getAll });
   const { data: thresholds }            = useQuery({ queryKey: ['thresholds'], queryFn: thresholdsApi.getAll });
   const { data: sensors }               = useQuery({ queryKey: ['sensors'],    queryFn: sensorsApi.getAll });
@@ -217,10 +206,8 @@ export function Assets() {
     return map;
   }, [sensors]);
 
-  // ── Derived: sensors for the currently managed asset ─────────────────────
   const managingSensors = managingAsset ? (sensorMap.get(managingAsset.id) ?? []) : [];
 
-  // ── Asset mutations ───────────────────────────────────────────────────────
   const createMutation = useMutation({
     mutationFn: async (d: AssetThresholdForm) => {
       const asset = await assetsApi.create({
@@ -270,7 +257,6 @@ export function Assets() {
     },
   });
 
-  // ── Sensor mutations ──────────────────────────────────────────────────────
   const sensorCreateMutation = useMutation({
     mutationFn: (d: SensorFormData & { assetId: number }) =>
       sensorsApi.create({ assetId: d.assetId, name: d.name, serialNumber: d.serialNumber, sensorType: d.sensorType as SensorType }),
@@ -303,7 +289,6 @@ export function Assets() {
     },
   });
 
-  // ── Edit defaults (asset + threshold) ─────────────────────────────────────
   const editDefaults = useMemo((): Partial<AssetThresholdForm> => {
     if (!editAsset) return {};
     const t = thresholdMap.get(editAsset.id);
@@ -313,7 +298,6 @@ export function Assets() {
     };
   }, [editAsset, thresholdMap]);
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
   function openManage(asset: Asset) {
     setManagingAsset(asset);
     setShowSensorForm(false);
@@ -370,7 +354,6 @@ export function Assets() {
                       className="border-b border-slate-50 last:border-0 hover:bg-indigo-50/30 transition-colors"
                       style={{ background: idx % 2 === 0 ? 'white' : 'rgba(248,250,252,0.5)' }}>
 
-                      {/* Name */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -384,7 +367,6 @@ export function Assets() {
                         </div>
                       </td>
 
-                      {/* Type */}
                       <td className="px-5 py-4">
                         {asset.assetType ? (
                           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
@@ -394,7 +376,6 @@ export function Assets() {
                         ) : <span className="text-slate-300">—</span>}
                       </td>
 
-                      {/* Location */}
                       <td className="px-5 py-4">
                         {asset.location ? (
                           <span className="flex items-center gap-1.5 text-slate-600 font-medium text-[13px]">
@@ -403,7 +384,6 @@ export function Assets() {
                         ) : <span className="text-slate-300">—</span>}
                       </td>
 
-                      {/* Sensors — clickable badge */}
                       <td className="px-5 py-4">
                         <button
                           onClick={() => openManage(asset)}
@@ -419,7 +399,6 @@ export function Assets() {
                         </button>
                       </td>
 
-                      {/* Thresholds */}
                       <td className="px-5 py-4">
                         {threshold ? (
                           <div className="flex flex-col gap-1">
@@ -438,7 +417,6 @@ export function Assets() {
                         )}
                       </td>
 
-                      {/* Status */}
                       <td className="px-5 py-4">
                         {asset.active ? (
                           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
@@ -453,7 +431,6 @@ export function Assets() {
                         )}
                       </td>
 
-                      {/* Actions */}
                       {(canWrite || canDelete) && (
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-1.5">
@@ -481,12 +458,10 @@ export function Assets() {
         )}
       </Card>
 
-      {/* ── Create Asset Modal ──────────────────────────────────────────────── */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="New Asset" subtitle="Register equipment and configure safety thresholds">
         <CreateAssetForm onSubmit={d => createMutation.mutate(d)} loading={createMutation.isPending} />
       </Modal>
 
-      {/* ── Edit Asset Modal ────────────────────────────────────────────────── */}
       <Modal open={!!editAsset} onClose={() => setEditAsset(null)} title="Edit Asset" subtitle={editAsset?.name ?? ''}>
         {editAsset && (
           <EditAssetForm key={editAsset.id} defaultValues={editDefaults}
@@ -495,7 +470,6 @@ export function Assets() {
         )}
       </Modal>
 
-      {/* ── Delete Asset Confirm ────────────────────────────────────────────── */}
       <ConfirmModal
         open={deleteId !== null} onClose={() => setDeleteId(null)}
         onConfirm={() => deleteId !== null && deleteMutation.mutate(deleteId)}
@@ -504,7 +478,6 @@ export function Assets() {
         message="This will permanently delete the asset and all its sensors, readings, tickets and thresholds. This action cannot be undone."
       />
 
-      {/* ── Manage Sensors Modal ────────────────────────────────────────────── */}
       <Modal
         open={!!managingAsset}
         onClose={closeManage}
@@ -512,7 +485,6 @@ export function Assets() {
         subtitle="View and manage sensors attached to this asset"
       >
         <div className="space-y-3">
-          {/* Sensor list */}
           {managingSensors.length === 0 && !showSensorForm ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
@@ -532,12 +504,10 @@ export function Assets() {
                   <div key={sensor.id}
                     className="flex items-center gap-3 px-3.5 py-3 rounded-xl"
                     style={{ background: 'rgba(248,250,252,0.8)', border: '1px solid rgba(226,232,240,0.8)' }}>
-                    {/* Icon */}
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{ background: st.bg, border: `1px solid ${st.border}` }}>
                       <Radio style={{ width: 13, height: 13, color: st.color }} />
                     </div>
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-bold text-slate-900 truncate">{sensor.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
@@ -550,7 +520,6 @@ export function Assets() {
                         )}
                       </div>
                     </div>
-                    {/* Status */}
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${sensor.active ? '' : ''}`}
                       style={sensor.active
                         ? { color: '#047857', background: 'rgba(16,185,129,0.1)' }
@@ -558,7 +527,6 @@ export function Assets() {
                       }>
                       {sensor.active ? 'Active' : 'Inactive'}
                     </span>
-                    {/* Actions */}
                     {(canWrite || canDelete) && (
                       <div className="flex items-center gap-1 flex-shrink-0">
                         {canWrite && (
@@ -587,7 +555,6 @@ export function Assets() {
             </div>
           )}
 
-          {/* Inline sensor form */}
           {showSensorForm && managingAsset && (
             <div className="border-t border-slate-100 pt-3">
               <div className="flex items-center justify-between mb-3">
@@ -622,7 +589,6 @@ export function Assets() {
             </div>
           )}
 
-          {/* Add sensor button */}
           {canWrite && !showSensorForm && (
             <button
               onClick={() => { setEditingSensor(null); setShowSensorForm(true); }}
@@ -637,7 +603,6 @@ export function Assets() {
         </div>
       </Modal>
 
-      {/* ── Delete Sensor Confirm ───────────────────────────────────────────── */}
       <ConfirmModal
         open={deleteSensorId !== null}
         onClose={() => setDeleteSensorId(null)}

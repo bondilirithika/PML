@@ -10,7 +10,6 @@ export function PageHeader({ title, subtitle, action }: PageHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-8">
       <div className="flex items-center gap-4">
-        {/* Gradient accent bar */}
         <div
           className="w-1 h-10 rounded-full flex-shrink-0"
           style={{ background: 'linear-gradient(180deg, #6366f1, #8b5cf6)' }}

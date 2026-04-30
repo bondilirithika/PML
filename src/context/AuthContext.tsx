@@ -17,8 +17,8 @@ interface AuthContextValue {
   isAdmin: boolean;
   isManager: boolean;
   isTechnician: boolean;
-  canWrite: boolean;   // MANAGER or ADMIN
-  canDelete: boolean;  // ADMIN only
+  canWrite: boolean;
+  canDelete: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
@@ -31,9 +31,8 @@ const USER_KEY  = 'pml_auth_user';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser]       = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true); // true until we check localStorage
+  const [loading, setLoading] = useState(true);
 
-  // Restore session from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(USER_KEY);

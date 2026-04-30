@@ -14,8 +14,6 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
 } from 'recharts';
 
-// ─── KPI Card ─────────────────────────────────────────────────────────────────
-
 interface KpiCardProps {
   label: string;
   value: string | number;
@@ -76,11 +74,7 @@ function KpiCard({ label, value, icon, iconGradient, iconShadow, accentColor, tr
   );
 }
 
-// ─── Bar colors ───────────────────────────────────────────────────────────────
-
 const BAR_COLORS = ['#6366f1', '#8b5cf6', '#818cf8', '#7c3aed', '#a78bfa'];
-
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
 
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
   if (!active || !payload?.length) return null;
@@ -94,8 +88,6 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
     </div>
   );
 }
-
-// ─── Dashboard page ───────────────────────────────────────────────────────────
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -151,7 +143,6 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {loadingAssets ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
@@ -203,7 +194,6 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        {/* Avg RMS chart */}
         <div className="xl:col-span-3">
           <Card>
             <CardHeader
@@ -266,7 +256,6 @@ export function Dashboard() {
           </Card>
         </div>
 
-        {/* Violations list */}
         <div className="xl:col-span-2">
           <Card className="h-full">
             <CardHeader
@@ -323,7 +312,6 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Active tickets */}
       <Card padding={false}>
         <div
           className="px-6 py-5 border-b border-slate-100 flex items-center justify-between"

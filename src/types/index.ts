@@ -1,10 +1,6 @@
-// ─── Enums (mirror Spring Boot enums exactly) ────────────────────────────────
-
 export type SensorType = 'VIBRATION' | 'TEMPERATURE' | 'COMBINED';
 
 export type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
-
-// ─── API Response wrapper (mirrors ApiResponse<T>) ───────────────────────────
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -12,8 +8,6 @@ export interface ApiResponse<T> {
   data: T;
   timestamp: string;
 }
-
-// ─── Pagination (Spring Data PagedModel via VIA_DTO) ─────────────────────────
 
 export interface Page<T> {
   content: T[];
@@ -24,8 +18,6 @@ export interface Page<T> {
     totalPages: number;
   };
 }
-
-// ─── Entities ────────────────────────────────────────────────────────────────
 
 export interface Asset {
   id: number;
@@ -89,8 +81,6 @@ export interface AvgRmsResponse {
   date: string;
   averageRms: number;
 }
-
-// ─── Request payloads ────────────────────────────────────────────────────────
 
 export interface AssetRequest {
   name: string;

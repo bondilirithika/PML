@@ -11,14 +11,11 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-      {/* Gradient icon container with glow */}
       <div className="relative mb-6">
-        {/* Outer glow ring */}
         <div
           className="absolute inset-0 rounded-3xl opacity-30 blur-xl"
           style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', transform: 'scale(1.3)' }}
         />
-        {/* Icon box */}
         <div
           className="relative w-20 h-20 rounded-3xl flex items-center justify-center"
           style={{
