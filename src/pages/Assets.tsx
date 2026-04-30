@@ -13,6 +13,7 @@ import { Modal, ConfirmModal } from '../components/ui/Modal';
 import { PageHeader } from '../components/ui/PageHeader';
 import { SkeletonTable } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 // ─── Form schema ──────────────────────────────────────────────────────────────
@@ -58,6 +59,7 @@ function AssetForm({
 
 export function Assets() {
   const qc = useQueryClient();
+  const { canWrite, canDelete } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
   const [editAsset, setEditAsset]   = useState<Asset | null>(null);
   const [deleteId, setDeleteId]     = useState<number | null>(null);
@@ -88,9 +90,11 @@ export function Assets() {
         title="Assets"
         subtitle={`${assets?.length ?? 0} industrial assets registered`}
         action={
-          <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
-            New Asset
-          </Button>
+          canWrite ? (
+            <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
+              New Asset
+            </Button>
+          ) : undefined
         }
       />
 
@@ -102,7 +106,7 @@ export function Assets() {
             icon={<Server className="w-7 h-7" />}
             title="No assets yet"
             description="Add your first piece of equipment to start monitoring"
-            action={<Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Asset</Button>}
+            action={canWrite ? <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Asset</Button> : undefined}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -112,7 +116,7 @@ export function Assets() {
                   className="border-b border-slate-100"
                   style={{ background: 'linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.8))' }}
                 >
-                  {['Name', 'Type', 'Location', 'Status', 'Actions'].map(h => (
+                  {['Name', 'Type', 'Location', 'Status', ...(canWrite || canDelete ? ['Actions'] : [])].map(h => (
                     <th key={h} className="sticky top-0 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-5 py-4 first:pl-6">
                       {h}
                     </th>
@@ -178,24 +182,30 @@ export function Assets() {
                         </span>
                       )}
                     </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setEditAsset(asset)}
-                          className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-150"
-                          title="Edit"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteId(asset.id)}
-                          className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
+                    {(canWrite || canDelete) && (
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-1.5">
+                          {canWrite && (
+                            <button
+                              onClick={() => setEditAsset(asset)}
+                              className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-150"
+                              title="Edit"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={() => setDeleteId(asset.id)}
+                              className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

@@ -1,28 +1,46 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-// All API calls go through this instance.
-// The Vite proxy forwards /api/* → http://localhost:8081/api/*
-// so no CORS issues in development.
+const TOKEN_KEY = 'pml_auth_token';
+const USER_KEY  = 'pml_auth_user';
+
 const apiClient = axios.create({
   baseURL: '/api/v1',
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
 });
 
+// ─── Request interceptor — attach JWT ─────────────────────────────────────────
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // ─── Response interceptor ─────────────────────────────────────────────────────
-// Unwraps the ApiResponse<T> wrapper so callers get .data directly.
-// Also handles errors globally — no try/catch in every component.
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message =
-      error.response?.data?.message ||
-      error.message ||
-      'An unexpected error occurred';
+    const status  = error.response?.status;
+    const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
+
+    if (status === 401) {
+      // Token expired or invalid — force logout
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      window.location.href = '/login';
+      return Promise.reject(error);
+    }
+
+    if (status === 403) {
+      toast.error('You do not have permission to perform this action', { duration: 4000 });
+      return Promise.reject(error);
+    }
 
     // Don't toast on 404 — components handle empty states themselves
-    if (error.response?.status !== 404) {
+    if (status !== 404) {
       toast.error(message, { duration: 4000 });
     }
 

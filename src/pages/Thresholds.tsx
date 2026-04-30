@@ -16,6 +16,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { SkeletonTable } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
 import { formatDate } from '../utils/formatters';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const schema = z.object({
@@ -69,6 +70,7 @@ function ThresholdForm({ onSubmit, defaultValues, loading, assets, isEdit }: {
 
 export function Thresholds() {
   const qc = useQueryClient();
+  const { canWrite, canDelete } = useAuth();
   const [createOpen, setCreateOpen]       = useState(false);
   const [editThreshold, setEditThreshold] = useState<Threshold | null>(null);
   const [deleteId, setDeleteId]           = useState<number | null>(null);
@@ -97,9 +99,11 @@ export function Thresholds() {
         title="Thresholds"
         subtitle="Configure RMS and temperature alert limits per asset"
         action={
-          <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
-            New Threshold
-          </Button>
+          canWrite ? (
+            <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
+              New Threshold
+            </Button>
+          ) : undefined
         }
       />
 
@@ -111,7 +115,7 @@ export function Thresholds() {
             icon={<SlidersHorizontal className="w-7 h-7" />}
             title="No thresholds configured"
             description="Set RMS and temperature limits to auto-generate tickets on breaches"
-            action={<Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Threshold</Button>}
+            action={canWrite ? <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Threshold</Button> : undefined}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -121,7 +125,7 @@ export function Thresholds() {
                   className="border-b border-slate-100"
                   style={{ background: 'linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.8))' }}
                 >
-                  {['Asset', 'Max RMS (mm/s)', 'Max Temperature (°C)', 'Last Updated', 'Actions'].map(h => (
+                  {['Asset', 'Max RMS (mm/s)', 'Max Temperature (°C)', 'Last Updated', ...(canWrite || canDelete ? ['Actions'] : [])].map(h => (
                     <th key={h} className="sticky top-0 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-5 py-4 first:pl-6">{h}</th>
                   ))}
                 </tr>
@@ -172,24 +176,30 @@ export function Thresholds() {
                       </div>
                     </td>
                     <td className="px-5 py-4 text-slate-500 text-[12px] font-medium">{formatDate(t.updatedAt)}</td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setEditThreshold(t)}
-                          className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-150"
-                          title="Edit"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteId(t.id)}
-                          className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
+                    {(canWrite || canDelete) && (
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-1.5">
+                          {canWrite && (
+                            <button
+                              onClick={() => setEditThreshold(t)}
+                              className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-150"
+                              title="Edit"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={() => setDeleteId(t.id)}
+                              className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

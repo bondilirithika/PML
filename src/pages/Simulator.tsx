@@ -11,7 +11,8 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { PageHeader } from '../components/ui/PageHeader';
-import { Radio, CheckCircle2, AlertTriangle, Zap, Cpu, ChevronRight } from 'lucide-react';
+import { Radio, CheckCircle2, AlertTriangle, Zap, Cpu, ChevronRight, Lock } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { formatDate, formatRms, formatTemp } from '../utils/formatters';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -80,6 +81,7 @@ function ResultCard({ reading }: ResultCardProps) {
 }
 
 export function Simulator() {
+  const { canWrite } = useAuth();
   const [lastReading, setLastReading] = useState<Reading | null>(null);
   const { data: sensors = [] } = useQuery({ queryKey: ['sensors'], queryFn: sensorsApi.getAll });
 
@@ -105,6 +107,27 @@ export function Simulator() {
   const currentTemp = Number(watch('temp')) || 0;
   const willBreach  = currentRms > 5 || currentTemp > 95;
   const hasValues   = currentRms > 0 || currentTemp > 0;
+
+  if (!canWrite) {
+    return (
+      <div>
+        <PageHeader
+          title="IoT Simulator"
+          subtitle="Simulate Azure IoT Hub / AWS IoT Core device payloads"
+        />
+        <div className="flex flex-col items-center justify-center py-24">
+          <div className="w-16 h-16 rounded-3xl flex items-center justify-center mb-6"
+            style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.1), rgba(220,38,38,0.15))', border: '1px solid rgba(239,68,68,0.2)' }}>
+            <Lock className="w-7 h-7 text-red-400" />
+          </div>
+          <h3 className="text-xl font-black text-slate-900 mb-2">Access Restricted</h3>
+          <p className="text-slate-500 text-sm text-center max-w-sm">
+            The IoT Simulator requires Manager or Admin privileges. Contact your administrator to request access.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

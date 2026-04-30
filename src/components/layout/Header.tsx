@@ -1,7 +1,8 @@
 import { useLocation } from 'react-router-dom';
-import { Bell } from 'lucide-react';
+import { Bell, LogOut } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ticketsApi } from '../../api/tickets';
+import { useAuth } from '../../context/AuthContext';
 import { format } from 'date-fns';
 
 const routeMeta: Record<string, { title: string; subtitle: string; crumb: string }> = {
@@ -18,6 +19,8 @@ export function Header() {
   const { pathname } = useLocation();
   const meta = routeMeta[pathname] ?? { title: 'PML System', subtitle: '', crumb: 'Home' };
 
+  const { user, logout, isAdmin, isManager } = useAuth();
+
   const { data } = useQuery({
     queryKey: ['tickets', 'count'],
     queryFn:  ticketsApi.countOpen,
@@ -26,6 +29,12 @@ export function Header() {
 
   const openCount = data?.openTickets ?? 0;
   const today = format(new Date(), 'EEE, d MMM yyyy');
+
+  const rolePillStyle = isAdmin
+    ? { bg: 'rgba(99,102,241,0.1)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.2)', label: 'Admin' }
+    : isManager
+    ? { bg: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)', label: 'Manager' }
+    : { bg: 'rgba(245,158,11,0.1)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)', label: 'Technician' };
 
   return (
     <header
@@ -87,33 +96,34 @@ export function Header() {
         {/* Divider */}
         <div className="w-px h-6 bg-slate-200 mx-1" />
 
-        {/* Avatar */}
-        <button
-          className="flex items-center gap-2.5 pl-1 pr-3 py-1.5 rounded-xl transition-all duration-150 hover:bg-white"
-          style={{ border: '1px solid transparent' }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.border = '1px solid rgba(226,232,240,0.8)';
-            (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.border = '1px solid transparent';
-            (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
-          }}
-        >
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-[11px] font-extrabold flex-shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              boxShadow: '0 2px 8px rgba(99,102,241,0.4)',
-            }}
+        {/* Avatar + user info + logout */}
+        <div className="flex items-center gap-2">
+          {/* Avatar + user info */}
+          <div className="flex items-center gap-2.5 pl-1 pr-2 py-1.5 rounded-xl"
+            style={{ background: 'white', border: '1px solid rgba(226,232,240,0.8)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-[11px] font-extrabold flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 2px 8px rgba(99,102,241,0.4)' }}>
+              {user?.username?.charAt(0).toUpperCase() ?? 'U'}
+            </div>
+            <div className="hidden md:block text-left">
+              <p className="text-[12px] font-bold text-slate-800 leading-none">{user?.username}</p>
+              <span className="inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                style={{ background: rolePillStyle.bg, color: rolePillStyle.color, border: rolePillStyle.border }}>
+                {rolePillStyle.label}
+              </span>
+            </div>
+          </div>
+
+          {/* Logout button */}
+          <button
+            onClick={logout}
+            title="Sign out"
+            className="p-2 rounded-xl text-slate-400 hover:text-red-500 transition-all duration-150"
+            style={{ background: 'white', border: '1px solid rgba(226,232,240,0.8)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
           >
-            CG
-          </div>
-          <div className="hidden md:block text-left">
-            <p className="text-[12px] font-bold text-slate-800 leading-none">Cognizant</p>
-            <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Engineer</p>
-          </div>
-        </button>
+            <LogOut className="w-[17px] h-[17px]" />
+          </button>
+        </div>
       </div>
     </header>
   );

@@ -17,6 +17,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { SkeletonTable } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
 import { sensorTypeColors, sensorTypeLabel, formatDate } from '../utils/formatters';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const schema = z.object({
@@ -78,6 +79,7 @@ const sensorTypeDotColor: Record<string, string> = {
 
 export function Sensors() {
   const qc = useQueryClient();
+  const { canWrite, canDelete } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
   const [editSensor, setEditSensor] = useState<Sensor | null>(null);
   const [deleteId, setDeleteId]     = useState<number | null>(null);
@@ -108,9 +110,11 @@ export function Sensors() {
         title="Sensors"
         subtitle={`${sensors?.length ?? 0} sensors registered`}
         action={
-          <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
-            New Sensor
-          </Button>
+          canWrite ? (
+            <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
+              New Sensor
+            </Button>
+          ) : undefined
         }
       />
 
@@ -122,7 +126,7 @@ export function Sensors() {
             icon={<Radio className="w-7 h-7" />}
             title="No sensors yet"
             description="Add sensors to your assets to start collecting data"
-            action={<Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Sensor</Button>}
+            action={canWrite ? <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Sensor</Button> : undefined}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -132,7 +136,7 @@ export function Sensors() {
                   className="border-b border-slate-100"
                   style={{ background: 'linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.8))' }}
                 >
-                  {['Sensor', 'Asset', 'Serial Number', 'Type', 'Status', 'Installed', 'Actions'].map(h => (
+                  {['Sensor', 'Asset', 'Serial Number', 'Type', 'Status', 'Installed', ...(canWrite || canDelete ? ['Actions'] : [])].map(h => (
                     <th key={h} className="sticky top-0 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-5 py-4 first:pl-6">{h}</th>
                   ))}
                 </tr>
@@ -197,16 +201,22 @@ export function Sensors() {
                       }
                     </td>
                     <td className="px-5 py-4 text-slate-500 whitespace-nowrap text-[12px] font-medium">{formatDate(s.installedAt)}</td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <button onClick={() => setEditSensor(s)} className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-150" title="Edit">
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => setDeleteId(s.id)} className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150" title="Delete">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
+                    {(canWrite || canDelete) && (
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-1.5">
+                          {canWrite && (
+                            <button onClick={() => setEditSensor(s)} className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-150" title="Edit">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button onClick={() => setDeleteId(s.id)} className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150" title="Delete">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

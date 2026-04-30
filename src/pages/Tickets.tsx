@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Filter, Ticket as TicketIcon } from 'lucide-react';
 import { ticketsApi } from '../api/tickets';
 import type { Ticket, TicketStatus } from '../types';
+import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -34,6 +35,7 @@ function PriorityDot({ status }: { status: TicketStatus }) {
 
 export function Tickets() {
   const qc = useQueryClient();
+  const { canWrite, canDelete } = useAuth();
   const [page, setPage]                 = useState(0);
   const [statusFilter, setStatusFilter] = useState<TicketStatus | ''>('');
   const [updatingId, setUpdatingId]     = useState<number | null>(null);
