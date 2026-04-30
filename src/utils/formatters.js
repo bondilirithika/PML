@@ -45,7 +45,6 @@ export const sensorTypeStyle = {
   COMBINED:    { bg: 'rgba(16,185,129,0.08)',  color: '#059669', border: 'rgba(16,185,129,0.2)',  dot: '#10b981' },
 };
 
-// Allowed ticket transitions — mirrors the backend state machine
 export const allowedTransitions = {
   OPEN:        ['IN_PROGRESS', 'CLOSED'],
   IN_PROGRESS: ['RESOLVED', 'CLOSED'],
