@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Pencil, Trash2, MapPin, Tag, CheckCircle2, XCircle,
   Server, SlidersHorizontal, AlertTriangle, Activity, Thermometer,
-  Cpu, Radio, X,
+  Cpu, Radio, X, Power, PowerOff,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -25,7 +25,7 @@ import toast from 'react-hot-toast';
 
 const sensorSchema = z.object({
   name:         z.string().min(1, 'Name is required').max(100),
-  serialNumber: z.string().max(100).optional().or(z.literal('')),
+  serialNumber: z.string().min(1, 'Serial number is required').max(100),
   sensorType:   z.enum(['VIBRATION', 'TEMPERATURE', 'COMBINED']),
 });
 
@@ -39,7 +39,7 @@ function SensorForm({ onSubmit, defaultValues, loading, onCancel, isEdit }) {
       <div className="grid grid-cols-2 gap-3">
         <Input label="Sensor Name" required error={errors.name?.message}
           {...register('name')} placeholder="e.g. Vibration Sensor A" />
-        <Input label="Serial Number" error={errors.serialNumber?.message}
+        <Input label="Serial Number" required error={errors.serialNumber?.message}
           {...register('serialNumber')} placeholder="SN-PUMP01-VIB" />
       </div>
       <Select
@@ -117,12 +117,13 @@ function CreateAssetForm({ onSubmit, loading }) {
   const [sensorListError, setSensorListError] = useState('');
 
   function addSensor() {
-    if (!draft.name.trim())       { setDraftError('Name is required'); return; }
-    if (!draft.sensorType)        { setDraftError('Type is required'); return; }
+    if (!draft.name.trim())         { setDraftError('Name is required'); return; }
+    if (!draft.serialNumber.trim()) { setDraftError('Serial number is required'); return; }
+    if (!draft.sensorType)          { setDraftError('Type is required'); return; }
     setPendingSensors(prev => [...prev, {
-      name: draft.name.trim(),
-      serialNumber: draft.serialNumber.trim() || undefined,
-      sensorType: draft.sensorType,
+      name:         draft.name.trim(),
+      serialNumber: draft.serialNumber.trim(),
+      sensorType:   draft.sensorType,
     }]);
     setDraft({ name: '', serialNumber: '', sensorType: '' });
     setDraftError('');
@@ -190,7 +191,7 @@ function CreateAssetForm({ onSubmit, loading }) {
               <Input label="Sensor Name" required value={draft.name}
                 onChange={e => { setDraft(d => ({ ...d, name: e.target.value })); setDraftError(''); }}
                 placeholder="e.g. Vibration A" />
-              <Input label="Serial Number" value={draft.serialNumber}
+              <Input label="Serial Number" required value={draft.serialNumber}
                 onChange={e => setDraft(d => ({ ...d, serialNumber: e.target.value }))}
                 placeholder="SN-PUMP01-VIB" />
             </div>
@@ -345,6 +346,15 @@ export function Assets() {
     },
   });
 
+  const statusMutation = useMutation({
+    mutationFn: ({ id, active }) => assetsApi.setStatus(id, active),
+    onSuccess: (_, { active }) => {
+      qc.invalidateQueries({ queryKey: ['assets'] });
+      toast.success(active ? 'Asset activated' : 'Asset deactivated');
+    },
+    onError: (err) => toast.error(err.response?.data?.message ?? 'Failed to update asset status'),
+  });
+
   const sensorCreateMutation = useMutation({
     mutationFn: (d) =>
       sensorsApi.create({ assetId: d.assetId, name: d.name, serialNumber: d.serialNumber, sensorType: d.sensorType }),
@@ -366,6 +376,15 @@ export function Assets() {
       toast.success('Sensor updated');
     },
     onError: () => toast.error('Failed to update sensor'),
+  });
+
+  const sensorStatusMutation = useMutation({
+    mutationFn: ({ id, active }) => sensorsApi.setStatus(id, active),
+    onSuccess: (_, { active }) => {
+      qc.invalidateQueries({ queryKey: ['sensors'] });
+      toast.success(active ? 'Sensor activated' : 'Sensor deactivated');
+    },
+    onError: (err) => toast.error(err.response?.data?.message ?? 'Failed to update sensor status'),
   });
 
   const sensorDeleteMutation = useMutation({
@@ -506,15 +525,34 @@ export function Assets() {
                       </td>
 
                       <td className="px-5 py-4">
-                        {asset.active ? (
-                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
-                            style={{ color: '#047857', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }}>
-                            <CheckCircle2 className="w-3 h-3" />Active
-                          </span>
+                        {canWrite ? (
+                          <button
+                            onClick={() => statusMutation.mutate({ id: asset.id, active: !asset.active })}
+                            disabled={statusMutation.isPending}
+                            title={asset.active ? 'Click to deactivate' : 'Click to activate'}
+                            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full transition-opacity hover:opacity-70 disabled:opacity-40 cursor-pointer"
+                            style={asset.active
+                              ? { color: '#047857', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }
+                              : { color: '#64748b', background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)' }
+                            }
+                          >
+                            {asset.active
+                              ? <><Power className="w-3 h-3" />Active</>
+                              : <><PowerOff className="w-3 h-3" />Inactive</>
+                            }
+                          </button>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
-                            style={{ color: '#64748b', background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)' }}>
-                            <XCircle className="w-3 h-3" />Inactive
+                          <span
+                            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                            style={asset.active
+                              ? { color: '#047857', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }
+                              : { color: '#64748b', background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)' }
+                            }
+                          >
+                            {asset.active
+                              ? <><CheckCircle2 className="w-3 h-3" />Active</>
+                              : <><XCircle className="w-3 h-3" />Inactive</>
+                            }
                           </span>
                         )}
                       </td>
@@ -608,13 +646,30 @@ export function Assets() {
                         )}
                       </div>
                     </div>
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0`}
-                      style={sensor.active
-                        ? { color: '#047857', background: 'rgba(16,185,129,0.1)' }
-                        : { color: '#64748b', background: 'rgba(100,116,139,0.1)' }
-                      }>
-                      {sensor.active ? 'Active' : 'Inactive'}
-                    </span>
+                    {canWrite ? (
+                      <button
+                        onClick={() => sensorStatusMutation.mutate({ id: sensor.id, active: !sensor.active })}
+                        disabled={sensorStatusMutation.isPending}
+                        title={sensor.active ? 'Click to deactivate' : 'Click to activate'}
+                        className="text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 transition-opacity hover:opacity-70 disabled:opacity-40 cursor-pointer"
+                        style={sensor.active
+                          ? { color: '#047857', background: 'rgba(16,185,129,0.1)' }
+                          : { color: '#64748b', background: 'rgba(100,116,139,0.1)' }
+                        }
+                      >
+                        {sensor.active ? 'Active' : 'Inactive'}
+                      </button>
+                    ) : (
+                      <span
+                        className="text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                        style={sensor.active
+                          ? { color: '#047857', background: 'rgba(16,185,129,0.1)' }
+                          : { color: '#64748b', background: 'rgba(100,116,139,0.1)' }
+                        }
+                      >
+                        {sensor.active ? 'Active' : 'Inactive'}
+                      </span>
+                    )}
                     {(canWrite || canDelete) && (
                       <div className="flex items-center gap-1 flex-shrink-0">
                         {canWrite && (

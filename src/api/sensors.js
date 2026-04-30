@@ -16,6 +16,9 @@ export const sensorsApi = {
   update: (id, payload) =>
     apiClient.put(`/sensors/${id}`, payload).then(r => r.data.data),
 
+  setStatus: (id, active) =>
+    apiClient.patch(`/sensors/${id}/status`, { active }).then(r => r.data.data),
+
   delete: (id) =>
     apiClient.delete(`/sensors/${id}`).then(r => r.data),
 };

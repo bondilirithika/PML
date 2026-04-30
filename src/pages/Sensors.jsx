@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, XCircle, Radio } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { CheckCircle2, XCircle, Radio, Power, PowerOff } from 'lucide-react';
 import { sensorsApi } from '../api/sensors';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -7,9 +7,23 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { SkeletonTable } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
 import { sensorTypeColors, sensorTypeLabel, sensorTypeStyle, formatDate } from '../utils/formatters';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 export function Sensors() {
+  const qc = useQueryClient();
+  const { canWrite } = useAuth();
+
   const { data: sensors, isLoading } = useQuery({ queryKey: ['sensors'], queryFn: sensorsApi.getAll });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, active }) => sensorsApi.setStatus(id, active),
+    onSuccess: (_, { active }) => {
+      qc.invalidateQueries({ queryKey: ['sensors'] });
+      toast.success(active ? 'Sensor activated' : 'Sensor deactivated');
+    },
+    onError: (err) => toast.error(err.response?.data?.message ?? 'Failed to update sensor status'),
+  });
 
   return (
     <>
@@ -73,15 +87,28 @@ export function Sensors() {
                     </td>
 
                     <td className="px-5 py-4">
-                      {s.active ? (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
-                          style={{ color: '#047857', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }}>
-                          <CheckCircle2 className="w-3 h-3" />Active
-                        </span>
+                      {canWrite ? (
+                        <button
+                          onClick={() => statusMutation.mutate({ id: s.id, active: !s.active })}
+                          disabled={statusMutation.isPending}
+                          title={s.active ? 'Click to deactivate' : 'Click to activate'}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full transition-opacity hover:opacity-70 disabled:opacity-40 cursor-pointer"
+                          style={s.active
+                            ? { color: '#047857', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }
+                            : { color: '#64748b', background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)' }
+                          }
+                        >
+                          {s.active ? <><Power className="w-3 h-3" />Active</> : <><PowerOff className="w-3 h-3" />Inactive</>}
+                        </button>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
-                          style={{ color: '#64748b', background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)' }}>
-                          <XCircle className="w-3 h-3" />Inactive
+                        <span
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                          style={s.active
+                            ? { color: '#047857', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }
+                            : { color: '#64748b', background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)' }
+                          }
+                        >
+                          {s.active ? <><CheckCircle2 className="w-3 h-3" />Active</> : <><XCircle className="w-3 h-3" />Inactive</>}
                         </span>
                       )}
                     </td>

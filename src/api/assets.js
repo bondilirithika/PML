@@ -13,6 +13,9 @@ export const assetsApi = {
   update: (id, payload) =>
     apiClient.put(`/assets/${id}`, payload).then(r => r.data.data),
 
+  setStatus: (id, active) =>
+    apiClient.patch(`/assets/${id}/status`, { active }).then(r => r.data.data),
+
   delete: (id) =>
     apiClient.delete(`/assets/${id}`).then(r => r.data),
 
