@@ -1,22 +1,21 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 interface HeaderProps {
   sidebarOpen: boolean;
 }
 
-const routeMeta: Record<string, { title: string; crumb: string }> = {
-  '/':          { title: 'Dashboard',     crumb: 'Dashboard' },
-  '/assets':    { title: 'Assets',        crumb: 'Assets' },
-  '/sensors':   { title: 'Sensors',       crumb: 'Sensors' },
-  '/readings':  { title: 'Readings',      crumb: 'Readings' },
-  '/tickets':   { title: 'Tickets',       crumb: 'Tickets' },
-  '/simulator': { title: 'IoT Simulator', crumb: 'Simulator' },
+const routeMeta: Record<string, string> = {
+  '/assets':    'Assets',
+  '/sensors':   'Sensors',
+  '/readings':  'Readings',
+  '/tickets':   'Tickets',
+  '/simulator': 'IoT Simulator',
 };
 
 export function Header({ sidebarOpen }: HeaderProps) {
   const { pathname } = useLocation();
-  const meta = routeMeta[pathname] ?? { title: 'PML System', crumb: 'Home' };
+  const pageName = routeMeta[pathname];
   const { user, isAdmin, isManager } = useAuth();
 
   const avatarGradient = isAdmin
@@ -37,14 +36,20 @@ export function Header({ sidebarOpen }: HeaderProps) {
       style={{ left: sidebarOpen ? 232 : 0 }}
     >
       <div>
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-[11px] font-semibold text-slate-400">PML</span>
-          <span className="text-[11px] text-slate-300">/</span>
-          <span className="text-[11px] font-semibold text-indigo-500">{meta.crumb}</span>
-        </div>
-        <h2 className="text-[15px] font-extrabold text-slate-900 leading-none tracking-tight">
-          {meta.title}
-        </h2>
+        {pageName ? (
+          <div className="flex items-center gap-1.5">
+            <Link
+              to="/"
+              className="text-[12px] font-semibold text-slate-400 hover:text-indigo-500 transition-colors"
+            >
+              Dashboard
+            </Link>
+            <span className="text-[11px] text-slate-300">/</span>
+            <span className="text-[12px] font-semibold text-indigo-500">{pageName}</span>
+          </div>
+        ) : (
+          <span className="text-[13px] font-bold text-slate-700">Dashboard</span>
+        )}
       </div>
 
       <div

@@ -127,13 +127,41 @@ function ThresholdSection({ errors, register }: {
   );
 }
 
-function CreateAssetForm({ onSubmit, loading }: { onSubmit: (d: AssetThresholdForm) => void; loading?: boolean }) {
+function CreateAssetForm({ onSubmit, loading }: {
+  onSubmit: (d: AssetThresholdForm, sensors: SensorFormData[]) => void;
+  loading?: boolean;
+}) {
   const { register, handleSubmit, formState: { errors } } = useForm<AssetThresholdForm>({
     resolver: zodResolver(assetThresholdSchema),
     defaultValues: { rmsMax: 5.0, tempMax: 95 },
   });
+
+  const [pendingSensors,  setPendingSensors]  = useState<SensorFormData[]>([]);
+  const [showSensorAdd,   setShowSensorAdd]   = useState(false);
+  const [draft,           setDraft]           = useState<{ name: string; serialNumber: string; sensorType: string }>({ name: '', serialNumber: '', sensorType: '' });
+  const [draftError,      setDraftError]      = useState('');
+  const [sensorListError, setSensorListError] = useState('');
+
+  function addSensor() {
+    if (!draft.name.trim())       { setDraftError('Name is required'); return; }
+    if (!draft.sensorType)        { setDraftError('Type is required'); return; }
+    setPendingSensors(prev => [...prev, {
+      name: draft.name.trim(),
+      serialNumber: draft.serialNumber.trim() || undefined,
+      sensorType: draft.sensorType as SensorFormData['sensorType'],
+    }]);
+    setDraft({ name: '', serialNumber: '', sensorType: '' });
+    setDraftError('');
+    setSensorListError('');
+    setShowSensorAdd(false);
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(d => {
+      if (pendingSensors.length === 0) { setSensorListError('Add at least one sensor before creating the asset.'); return; }
+      setSensorListError('');
+      onSubmit(d, pendingSensors);
+    })} className="space-y-4">
       <Input label="Asset Name" required error={errors.name?.message} {...register('name')} placeholder="e.g. Pump-01" />
       <div className="grid grid-cols-2 gap-4">
         <Input label="Location" error={errors.location?.message} {...register('location')} placeholder="Plant A – Floor 1" />
@@ -141,6 +169,92 @@ function CreateAssetForm({ onSubmit, loading }: { onSubmit: (d: AssetThresholdFo
       </div>
       <Input label="Description" error={errors.description?.message} {...register('description')} placeholder="Brief description…" />
       <ThresholdSection errors={errors} register={register} />
+
+      {/* Sensors section */}
+      <div className="pt-1">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+            <Cpu className="w-3 h-3 text-emerald-500" />
+          </div>
+          <span className="text-[12px] font-bold text-slate-500 uppercase tracking-widest">Sensors</span>
+          <div className="flex-1 h-px" style={{ background: 'rgba(16,185,129,0.12)' }} />
+          <span className="text-[11px] font-bold" style={{ color: '#ef4444' }}>Required</span>
+        </div>
+
+        {sensorListError && (
+          <p className="text-xs text-red-600 font-medium -mt-1">{sensorListError}</p>
+        )}
+
+        {pendingSensors.length > 0 && (
+          <div className="space-y-1.5 mb-3">
+            {pendingSensors.map((s, i) => {
+              const st = sensorTypeStyle[s.sensorType] ?? sensorTypeStyle.COMBINED;
+              return (
+                <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-xl"
+                  style={{ background: 'rgba(248,250,252,0.8)', border: '1px solid rgba(226,232,240,0.8)' }}>
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: st.dot }} />
+                  <span className="text-[13px] font-bold text-slate-800 flex-1">{s.name}</span>
+                  {s.serialNumber && <code className="text-[11px] font-mono text-indigo-400">{s.serialNumber}</code>}
+                  <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded" style={{ background: st.bg, color: st.color }}>
+                    {sensorTypeLabel[s.sensorType]}
+                  </span>
+                  <button type="button" onClick={() => setPendingSensors(prev => prev.filter((_, j) => j !== i))}
+                    className="p-1 rounded-lg text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {showSensorAdd ? (
+          <div className="rounded-xl p-3 space-y-2.5"
+            style={{ background: 'rgba(248,250,252,0.8)', border: '1px solid rgba(226,232,240,0.8)' }}>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Input label="Sensor Name" required value={draft.name}
+                onChange={e => { setDraft(d => ({ ...d, name: e.target.value })); setDraftError(''); }}
+                placeholder="e.g. Vibration A" />
+              <Input label="Serial Number" value={draft.serialNumber}
+                onChange={e => setDraft(d => ({ ...d, serialNumber: e.target.value }))}
+                placeholder="SN-PUMP01-VIB" />
+            </div>
+            <Select
+              label="Sensor Type" required
+              value={draft.sensorType}
+              onChange={e => { setDraft(d => ({ ...d, sensorType: e.target.value })); setDraftError(''); }}
+              placeholder="Select type…"
+              options={[
+                { value: 'VIBRATION',   label: 'Vibration' },
+                { value: 'TEMPERATURE', label: 'Temperature' },
+                { value: 'COMBINED',    label: 'Combined (RMS + Temp)' },
+              ]}
+            />
+            {draftError && <p className="text-xs text-red-500 font-medium">{draftError}</p>}
+            <div className="flex gap-2">
+              <button type="button" onClick={() => { setShowSensorAdd(false); setDraftError(''); }}
+                className="flex-1 py-1.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-100 border border-slate-200 transition-colors">
+                Cancel
+              </button>
+              <button type="button" onClick={addSensor}
+                className="flex-1 py-1.5 rounded-xl text-sm font-semibold text-white transition-colors"
+                style={{ background: 'linear-gradient(135deg, #059669, #10b981)' }}>
+                Add
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" onClick={() => setShowSensorAdd(true)}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-all duration-150"
+            style={{ background: 'rgba(16,185,129,0.06)', border: '1px dashed rgba(16,185,129,0.35)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(16,185,129,0.1)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(16,185,129,0.06)'; }}>
+            <Plus className="w-3.5 h-3.5" />Add Sensor
+          </button>
+        )}
+      </div>
+
       <div className="pt-1">
         <Button type="submit" loading={loading} className="w-full">Create Asset</Button>
       </div>
@@ -209,16 +323,20 @@ export function Assets() {
   const managingSensors = managingAsset ? (sensorMap.get(managingAsset.id) ?? []) : [];
 
   const createMutation = useMutation({
-    mutationFn: async (d: AssetThresholdForm) => {
+    mutationFn: async ({ form, sensors }: { form: AssetThresholdForm; sensors: SensorFormData[] }) => {
       const asset = await assetsApi.create({
-        name: d.name, location: d.location, assetType: d.assetType, description: d.description,
+        name: form.name, location: form.location, assetType: form.assetType, description: form.description,
       } as AssetRequest);
-      await thresholdsApi.create({ assetId: asset.id, rmsMax: d.rmsMax, tempMax: d.tempMax });
+      await thresholdsApi.create({ assetId: asset.id, rmsMax: form.rmsMax, tempMax: form.tempMax });
+      for (const s of sensors) {
+        await sensorsApi.create({ assetId: asset.id, name: s.name, serialNumber: s.serialNumber, sensorType: s.sensorType as SensorType });
+      }
       return asset;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['assets'] });
       qc.invalidateQueries({ queryKey: ['thresholds'] });
+      qc.invalidateQueries({ queryKey: ['sensors'] });
       setCreateOpen(false);
       toast.success('Asset created');
     },
@@ -459,7 +577,7 @@ export function Assets() {
       </Card>
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="New Asset" subtitle="Register equipment and configure safety thresholds">
-        <CreateAssetForm onSubmit={d => createMutation.mutate(d)} loading={createMutation.isPending} />
+        <CreateAssetForm onSubmit={(form, sensors) => createMutation.mutate({ form, sensors })} loading={createMutation.isPending} />
       </Modal>
 
       <Modal open={!!editAsset} onClose={() => setEditAsset(null)} title="Edit Asset" subtitle={editAsset?.name ?? ''}>
