@@ -15,19 +15,13 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-const TEST_CREDENTIALS = [
-  { role: 'Admin',      username: 'admin',      password: 'admin123',   color: '#6366f1', desc: 'Full access'         },
-  { role: 'Manager',    username: 'manager',    password: 'manager123', color: '#10b981', desc: 'Operational control' },
-  { role: 'Technician', username: 'technician', password: 'tech123',    color: '#f59e0b', desc: 'Read + status only'  },
-];
-
 export function Login() {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
@@ -46,11 +40,6 @@ export function Login() {
     }
   };
 
-  const fillCredentials = (username: string, password: string) => {
-    setValue('username', username);
-    setValue('password', password);
-  };
-
   return (
     <div className="min-h-screen flex" style={{ background: '#f8fafc' }}>
 
@@ -65,8 +54,6 @@ export function Login() {
             style={{ background: 'radial-gradient(circle, #6366f1, transparent 70%)' }} />
           <div className="absolute bottom-[-60px] right-[-60px] w-[350px] h-[350px] rounded-full opacity-15"
             style={{ background: 'radial-gradient(circle, #8b5cf6, transparent 70%)' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full opacity-5"
-            style={{ background: 'radial-gradient(circle, #a78bfa, transparent 60%)' }} />
         </div>
         {/* Grid overlay */}
         <div className="absolute inset-0 opacity-[0.04]" style={{
@@ -102,50 +89,25 @@ export function Login() {
         </div>
 
         {/* Features */}
-        <div className="relative z-10 space-y-3 my-10">
+        <div className="relative z-10 space-y-4">
           {[
             { icon: Activity, text: 'Real-time vibration & temperature monitoring' },
             { icon: Shield,   text: 'Threshold-based anomaly detection' },
             { icon: Ticket,   text: 'Automated maintenance ticket creation' },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.3)' }}>
-                <Icon className="w-3.5 h-3.5 text-indigo-400" />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)' }}>
+                <Icon className="w-4 h-4 text-indigo-400" />
               </div>
-              <p className="text-slate-300 text-sm">{text}</p>
+              <p className="text-slate-300 text-sm font-medium">{text}</p>
             </div>
           ))}
         </div>
 
-        {/* Test credentials */}
+        {/* Footer */}
         <div className="relative z-10">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">Quick Login — Test Accounts</p>
-          <div className="space-y-2">
-            {TEST_CREDENTIALS.map(({ role, username, password, color, desc }) => (
-              <button
-                key={role}
-                type="button"
-                onClick={() => fillCredentials(username, password)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all duration-150 group"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)'; }}
-              >
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-[10px] font-black"
-                  style={{ background: color }}>
-                  {role[0]}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-xs font-bold leading-none">{role}
-                    <span className="ml-2 text-slate-500 font-mono text-[10px]">{username} / {password}</span>
-                  </p>
-                  <p className="text-slate-500 text-[10px] mt-0.5">{desc}</p>
-                </div>
-                <span className="text-[10px] text-slate-600 group-hover:text-indigo-400 transition-colors font-medium">Fill →</span>
-              </button>
-            ))}
-          </div>
+          <p className="text-slate-600 text-xs">© 2026 PML · All rights reserved</p>
         </div>
       </div>
 
@@ -182,24 +144,22 @@ export function Login() {
               {...register('username')}
             />
 
-            <div>
-              <div className="relative">
-                <Input
-                  label="Password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  error={errors.password?.message}
-                  autoComplete="current-password"
-                  {...register('password')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+            <div className="relative">
+              <Input
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter your password"
+                error={errors.password?.message}
+                autoComplete="current-password"
+                {...register('password')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
 
             <div className="pt-2">
@@ -210,7 +170,7 @@ export function Login() {
           </form>
 
           <p className="mt-8 text-center text-xs text-slate-400">
-            Predictive Maintenance Lite · Cognizant Engineering
+            Predictive Maintenance Lite · PML System
           </p>
         </div>
       </div>

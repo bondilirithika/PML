@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    strictPort: true,   // Fail loudly instead of silently jumping to 5174, 5175, etc. (breaks CORS)
     // Proxy all /api calls to the Spring Boot backend.
     // This avoids CORS issues in development — the browser talks to Vite (5173),
     // Vite proxies /api/* to Spring Boot (8081) server-side.

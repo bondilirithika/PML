@@ -53,19 +53,33 @@
 
   /* Sidebar nav item */
   .nav-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer select-none;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium cursor-pointer select-none;
+    transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease, color 180ms ease;
+    position: relative;
   }
   .nav-item-inactive {
-    @apply text-slate-400 hover:text-slate-200;
+    @apply text-slate-400;
     background: transparent;
   }
   .nav-item-inactive:hover {
-    background: rgba(255,255,255,0.06);
+    @apply text-slate-100;
+    background: rgba(255,255,255,0.07);
+    transform: translateX(4px);
   }
   .nav-item-active {
-    @apply text-white;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    box-shadow: 0 4px 14px rgba(99,102,241,0.45);
+    @apply text-white font-semibold;
+    background: linear-gradient(135deg, rgba(99,102,241,0.9), rgba(139,92,246,0.9));
+    box-shadow: 0 4px 16px rgba(99,102,241,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .nav-item-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    height: 60%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: rgba(255,255,255,0.7);
   }
 
   /* Data table row */

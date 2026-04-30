@@ -5,13 +5,12 @@ import { AuthProvider }      from './context/AuthContext';
 import { ProtectedRoute }    from './components/auth/ProtectedRoute';
 import { Layout }            from './components/layout/Layout';
 import { Login }             from './pages/Login';
-import { Dashboard }         from './pages/Dashboard';
-import { Assets }            from './pages/Assets';
-import { Sensors }           from './pages/Sensors';
-import { Readings }          from './pages/Readings';
-import { Thresholds }        from './pages/Thresholds';
-import { Tickets }           from './pages/Tickets';
-import { Simulator }         from './pages/Simulator';
+import { Dashboard }  from './pages/Dashboard';
+import { Assets }     from './pages/Assets';
+import { Sensors }    from './pages/Sensors';
+import { Readings }   from './pages/Readings';
+import { Tickets }    from './pages/Tickets';
+import { Simulator }  from './pages/Simulator';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,13 +34,12 @@ function App() {
             {/* Protected — all wrapped in ProtectedRoute → Layout */}
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
-                <Route index             element={<Dashboard />}  />
-                <Route path="assets"     element={<Assets />}     />
-                <Route path="sensors"    element={<Sensors />}    />
-                <Route path="readings"   element={<Readings />}   />
-                <Route path="thresholds" element={<Thresholds />} />
-                <Route path="tickets"    element={<Tickets />}    />
-                <Route path="simulator"  element={<Simulator />}  />
+                <Route index           element={<Dashboard />} />
+                <Route path="assets"   element={<Assets />}    />
+                <Route path="sensors"  element={<Sensors />}   />
+                <Route path="readings" element={<Readings />}  />
+                <Route path="tickets"  element={<Tickets />}   />
+                <Route path="simulator" element={<Simulator />} />
               </Route>
             </Route>
           </Routes>

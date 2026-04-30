@@ -2,8 +2,14 @@ import { NavLink } from 'react-router-dom';
 import { clsx } from 'clsx';
 import {
   LayoutDashboard, Server, Cpu, Activity,
-  SlidersHorizontal, Ticket, Radio, Zap,
+  Ticket, Radio, Zap, LogOut, ChevronLeft,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+
+interface SidebarProps {
+  open: boolean;
+  onToggle: () => void;
+}
 
 const mainNav = [
   { to: '/',           label: 'Dashboard',     icon: LayoutDashboard },
@@ -13,15 +19,15 @@ const mainNav = [
 ];
 
 const monitorNav = [
-  { to: '/thresholds', label: 'Thresholds',    icon: SlidersHorizontal },
-  { to: '/tickets',    label: 'Tickets',       icon: Ticket },
-  { to: '/simulator',  label: 'IoT Simulator', icon: Radio },
+  { to: '/tickets',   label: 'Tickets',       icon: Ticket },
+  { to: '/simulator', label: 'IoT Simulator', icon: Radio },
 ];
 
 function NavSection({ items, label }: { items: typeof mainNav; label: string }) {
   return (
     <div className="mb-6">
-      <p className="text-[10px] font-bold uppercase tracking-[0.15em] px-3 mb-2" style={{ color: 'rgba(148,163,184,0.5)' }}>
+      <p className="text-[10px] font-bold uppercase tracking-[0.15em] px-3 mb-2"
+        style={{ color: 'rgba(148,163,184,0.5)' }}>
         {label}
       </p>
       <ul className="space-y-0.5">
@@ -36,7 +42,9 @@ function NavSection({ items, label }: { items: typeof mainNav; label: string }) 
                       isActive ? 'text-white' : 'text-slate-500'
                     )}
                   />
-                  <span className={clsx('flex-1', isActive ? 'text-white' : 'text-slate-400')}>{navLabel}</span>
+                  <span className={clsx('flex-1 truncate', isActive ? 'text-white' : 'text-slate-400')}>
+                    {navLabel}
+                  </span>
                   {isActive && (
                     <span className="w-1.5 h-1.5 rounded-full bg-white/70 flex-shrink-0" />
                   )}
@@ -50,34 +58,47 @@ function NavSection({ items, label }: { items: typeof mainNav; label: string }) 
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ open, onToggle }: SidebarProps) {
+  const { logout } = useAuth();
+
   return (
     <aside
-      className="fixed inset-y-0 left-0 w-[232px] flex flex-col z-30"
+      className={clsx(
+        'fixed inset-y-0 left-0 w-[232px] flex flex-col z-30 transition-transform duration-300',
+        open ? 'translate-x-0' : '-translate-x-full'
+      )}
       style={{ background: '#0f172a', borderRight: '1px solid rgba(255,255,255,0.05)' }}
     >
-      {/* Brand */}
+      {/* Brand row */}
       <div
-        className="flex items-center gap-3 px-5 h-[65px] flex-shrink-0"
+        className="flex items-center justify-between px-5 h-[65px] flex-shrink-0"
         style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
       >
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            boxShadow: '0 0 20px rgba(99,102,241,0.5)',
-          }}
-        >
-          <Zap className="w-4.5 h-4.5 text-white" style={{ width: 18, height: 18 }} />
-        </div>
-        <div>
-          <p className="font-extrabold leading-none tracking-tight" style={{ color: '#f8fafc', fontSize: 14 }}>
-            PML System
-          </p>
-          <p className="mt-0.5 font-medium" style={{ color: 'rgba(148,163,184,0.7)', fontSize: 11 }}>
+        <div className="flex items-center gap-3">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              boxShadow: '0 0 20px rgba(99,102,241,0.5)',
+            }}
+          >
+            <Zap style={{ width: 18, height: 18 }} className="text-white" />
+          </div>
+          <p
+            className="font-semibold tracking-wide leading-none"
+            style={{ color: 'rgba(148,163,184,0.75)', fontSize: 12, letterSpacing: '0.05em' }}
+          >
             Predictive Maintenance
           </p>
         </div>
+
+        <button
+          onClick={onToggle}
+          className="p-1.5 rounded-lg text-slate-600 hover:text-slate-300 hover:bg-white/5 transition-colors"
+          title="Collapse sidebar"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Decorative gradient bar */}
@@ -92,27 +113,24 @@ export function Sidebar() {
         <NavSection items={monitorNav} label="Monitor"  />
       </nav>
 
-      {/* System status */}
-      <div
-        className="mx-3 mb-4 rounded-2xl p-3.5"
-        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-      >
-        <div className="flex items-center gap-2.5 mb-2">
-          <span className="relative flex h-2 w-2 flex-shrink-0">
-            <span
-              className="absolute inline-flex h-full w-full rounded-full opacity-75"
-              style={{ background: '#34d399', animation: 'ping 2s cubic-bezier(0,0,0.2,1) infinite' }}
-            />
-            <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: '#10b981' }} />
-          </span>
-          <p className="text-xs font-bold" style={{ color: '#34d399' }}>System Online</p>
-        </div>
-        <p className="text-[10px] font-medium" style={{ color: 'rgba(100,116,139,0.8)' }}>
-          Spring Boot 4.0 · MySQL · React 18
-        </p>
-        <p className="text-[10px] mt-0.5" style={{ color: 'rgba(100,116,139,0.5)' }}>
-          Cognizant © 2026
-        </p>
+      {/* Bottom — sign out only */}
+      <div className="mx-3 mb-5 flex-shrink-0">
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-500 hover:text-red-400 transition-all duration-200"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.08)';
+            (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.2)';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.03)';
+            (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.06)';
+          }}
+        >
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <span className="text-[13px] font-semibold">Sign Out</span>
+        </button>
       </div>
     </aside>
   );
