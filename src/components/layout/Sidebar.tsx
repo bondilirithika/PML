@@ -1,3 +1,4 @@
+import type React from 'react';
 import { NavLink } from 'react-router-dom';
 import { clsx } from 'clsx';
 import {
@@ -11,19 +12,22 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
-const mainNav = [
+type NavItem = { to: string; label: string; icon: React.ElementType; writeOnly?: boolean };
+
+const mainNav: NavItem[] = [
   { to: '/',           label: 'Dashboard',     icon: LayoutDashboard },
   { to: '/assets',     label: 'Assets',        icon: Server },
   { to: '/sensors',    label: 'Sensors',       icon: Cpu },
   { to: '/readings',   label: 'Readings',      icon: Activity },
 ];
 
-const monitorNav = [
+const monitorNav: NavItem[] = [
   { to: '/tickets',   label: 'Tickets',       icon: Ticket },
-  { to: '/simulator', label: 'IoT Simulator', icon: Radio },
+  { to: '/simulator', label: 'IoT Simulator', icon: Radio,  writeOnly: true },
 ];
 
-function NavSection({ items, label }: { items: typeof mainNav; label: string }) {
+function NavSection({ items, label, canWrite }: { items: NavItem[]; label: string; canWrite?: boolean }) {
+  const visible = items.filter(item => !item.writeOnly || canWrite);
   return (
     <div className="mb-6">
       <p className="text-[10px] font-bold uppercase tracking-[0.15em] px-3 mb-2"
@@ -31,7 +35,7 @@ function NavSection({ items, label }: { items: typeof mainNav; label: string }) 
         {label}
       </p>
       <ul className="space-y-0.5">
-        {items.map(({ to, label: navLabel, icon: Icon }) => (
+        {visible.map(({ to, label: navLabel, icon: Icon }) => (
           <li key={to}>
             <NavLink to={to} end={to === '/'}>
               {({ isActive }) => (
@@ -59,7 +63,7 @@ function NavSection({ items, label }: { items: typeof mainNav; label: string }) 
 }
 
 export function Sidebar({ open, onToggle }: SidebarProps) {
-  const { logout } = useAuth();
+  const { logout, canWrite } = useAuth();
 
   return (
     <aside
@@ -110,7 +114,7 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 pt-6">
         <NavSection items={mainNav}    label="Overview" />
-        <NavSection items={monitorNav} label="Monitor"  />
+        <NavSection items={monitorNav} label="Monitor" canWrite={canWrite} />
       </nav>
 
       {/* Bottom — sign out only */}

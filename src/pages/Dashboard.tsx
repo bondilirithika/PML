@@ -113,19 +113,22 @@ export function Dashboard() {
   const { data: openCount, isLoading: loadingCount } = useQuery({
     queryKey: ['tickets', 'count'],
     queryFn: ticketsApi.countOpen,
-    refetchInterval: 30000,
+    refetchInterval: 15000,
+    staleTime: 0,
   });
 
   const { data: activeTickets, isLoading: loadingActive } = useQuery({
     queryKey: ['tickets', 'active'],
     queryFn: ticketsApi.getActive,
-    refetchInterval: 30000,
+    refetchInterval: 15000,
+    staleTime: 0,
   });
 
   const { data: violations, isLoading: loadingViolations } = useQuery({
     queryKey: ['assets', 'violations'],
     queryFn: assetsApi.getViolations,
-    refetchInterval: 60000,
+    refetchInterval: 15000,
+    staleTime: 0,
   });
 
   const { data: avgRms, isLoading: loadingAvgRms } = useQuery({
@@ -181,7 +184,7 @@ export function Dashboard() {
               iconGradient="linear-gradient(135deg, #ef4444, #dc2626)"
               iconShadow="rgba(239,68,68,0.40)"
               accentColor="#ef4444"
-              trend={openCount?.openTickets ? `${openCount.openTickets} need attention` : undefined}
+              trend={openCount?.openTickets ? `${openCount.openTickets} unattended` : undefined}
               trendUp={false}
               onClick={() => navigate('/tickets')}
             />

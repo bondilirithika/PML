@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Filter, Ticket as TicketIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Ticket as TicketIcon, X } from 'lucide-react';
 import { ticketsApi } from '../api/tickets';
+import { assetsApi } from '../api/assets';
 import type { Ticket, TicketStatus } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/ui/Card';
@@ -17,7 +18,6 @@ import { clsx } from 'clsx';
 
 const PAGE_SIZE = 15;
 
-// Priority indicator based on status
 function PriorityDot({ status }: { status: TicketStatus }) {
   const colors: Record<string, string> = {
     OPEN:        '#ef4444',
@@ -26,24 +26,52 @@ function PriorityDot({ status }: { status: TicketStatus }) {
     CLOSED:      '#94a3b8',
   };
   return (
-    <span
-      className="w-2 h-2 rounded-full flex-shrink-0"
-      style={{ background: colors[status] ?? '#94a3b8' }}
-    />
+    <span className="w-2 h-2 rounded-full flex-shrink-0"
+      style={{ background: colors[status] ?? '#94a3b8' }} />
   );
 }
 
 export function Tickets() {
   const qc = useQueryClient();
-  const { canWrite, canDelete } = useAuth();
-  const [page, setPage]                 = useState(0);
+  const { canWrite } = useAuth();
+  const [page,         setPage]         = useState(0);
   const [statusFilter, setStatusFilter] = useState<TicketStatus | ''>('');
-  const [updatingId, setUpdatingId]     = useState<number | null>(null);
+  const [assetFilter,  setAssetFilter]  = useState<number | ''>('');
+  const [updatingId,   setUpdatingId]   = useState<number | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data: assets = [] } = useQuery({ queryKey: ['assets'], queryFn: assetsApi.getAll });
+
+  // When an asset is selected use the by-asset endpoint (flat list).
+  // Otherwise use the paginated endpoint.
+  const assetSelected = assetFilter !== '';
+
+  const { data: pagedData, isLoading: pagedLoading } = useQuery({
     queryKey: ['tickets', 'page', page],
     queryFn: () => ticketsApi.getPage({ page, size: PAGE_SIZE, sort: 'createdAt,desc' }),
+    enabled: !assetSelected,
   });
+
+  const { data: assetTickets, isLoading: assetLoading } = useQuery({
+    queryKey: ['tickets', 'by-asset', assetFilter],
+    queryFn: () => ticketsApi.getByAsset(assetFilter as number),
+    enabled: assetSelected,
+  });
+
+  const isLoading = assetSelected ? assetLoading : pagedLoading;
+
+  // Base ticket list for the current view
+  const baseTickets: Ticket[] = assetSelected
+    ? (assetTickets ?? [])
+    : (pagedData?.content ?? []);
+
+  // Apply status filter on top
+  const filtered = statusFilter
+    ? baseTickets.filter(t => t.status === statusFilter)
+    : baseTickets;
+
+  const totalPages   = assetSelected ? 1 : (pagedData?.page.totalPages ?? 1);
+  const totalCount   = assetSelected ? filtered.length : (pagedData?.page.totalElements ?? 0);
+  const activeFilters = (statusFilter ? 1 : 0) + (assetSelected ? 1 : 0);
 
   const updateMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: TicketStatus }) =>
@@ -55,35 +83,60 @@ export function Tickets() {
     },
   });
 
-  const tickets    = data?.content ?? [];
-  const filtered   = statusFilter ? tickets.filter(t => t.status === statusFilter) : tickets;
-  const totalPages = data?.page.totalPages ?? 1;
+  function clearFilters() {
+    setStatusFilter('');
+    setAssetFilter('');
+    setPage(0);
+  }
 
   return (
     <>
       <PageHeader
         title="Tickets"
-        subtitle={`${data?.page.totalElements ?? 0} total maintenance tickets`}
+        subtitle={`${totalCount} ${statusFilter ? ticketStatusLabel[statusFilter].toLowerCase() : 'total'} tickets${assetSelected ? ` · ${assets.find(a => a.id === assetFilter)?.name ?? ''}` : ''}`}
         action={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Filter bar */}
             <div
-              className="flex items-center gap-2 px-3 py-2 rounded-xl"
+              className="flex items-center gap-0 rounded-xl overflow-hidden"
               style={{ background: 'white', border: '1px solid rgba(226,232,240,0.8)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
             >
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
-              <Select
-                options={[
-                  { value: 'OPEN',        label: 'Open' },
-                  { value: 'IN_PROGRESS', label: 'In Progress' },
-                  { value: 'RESOLVED',    label: 'Resolved' },
-                  { value: 'CLOSED',      label: 'Closed' },
-                ]}
-                placeholder="All statuses"
-                value={statusFilter}
-                onChange={e => { setStatusFilter(e.target.value as TicketStatus | ''); setPage(0); }}
-                className="w-36 border-0 shadow-none p-0 bg-transparent focus:ring-0 rounded-none text-slate-700 font-semibold"
-              />
+              <div className="flex items-center gap-2 px-3 py-2 border-r border-slate-100">
+                <Filter className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                <Select
+                  options={assets.map(a => ({ value: String(a.id), label: a.name }))}
+                  placeholder="All assets"
+                  value={assetFilter === '' ? '' : String(assetFilter)}
+                  onChange={e => { setAssetFilter(e.target.value ? Number(e.target.value) : ''); setPage(0); }}
+                  className="w-36 border-0 shadow-none p-0 bg-transparent focus:ring-0 text-slate-700 font-semibold text-[13px]"
+                />
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2">
+                <Select
+                  options={[
+                    { value: 'OPEN',        label: 'Open' },
+                    { value: 'IN_PROGRESS', label: 'In Progress' },
+                    { value: 'RESOLVED',    label: 'Resolved' },
+                    { value: 'CLOSED',      label: 'Closed' },
+                  ]}
+                  placeholder="All statuses"
+                  value={statusFilter}
+                  onChange={e => { setStatusFilter(e.target.value as TicketStatus | ''); setPage(0); }}
+                  className="w-36 border-0 shadow-none p-0 bg-transparent focus:ring-0 text-slate-700 font-semibold text-[13px]"
+                />
+              </div>
             </div>
+
+            {/* Clear filters badge */}
+            {activeFilters > 0 && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-[12px] font-bold transition-colors"
+                style={{ background: 'rgba(99,102,241,0.08)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.2)' }}
+              >
+                <X className="w-3 h-3" />{activeFilters} filter{activeFilters > 1 ? 's' : ''}
+              </button>
+            )}
           </div>
         }
       />
@@ -95,17 +148,22 @@ export function Tickets() {
           <EmptyState
             icon={<TicketIcon className="w-7 h-7" />}
             title="No tickets found"
-            description="Tickets are auto-created when a reading breaches a configured threshold"
+            description={
+              activeFilters > 0
+                ? 'No tickets match the current filters. Try clearing them.'
+                : 'Tickets are auto-created when a reading breaches a configured threshold'
+            }
+            action={activeFilters > 0 ? (
+              <Button onClick={clearFilters}>Clear filters</Button>
+            ) : undefined}
           />
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr
-                    className="border-b border-slate-100"
-                    style={{ background: 'linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.8))' }}
-                  >
+                  <tr className="border-b border-slate-100"
+                    style={{ background: 'linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.8))' }}>
                     {['#', 'Asset', 'Sensor', 'Status', 'Description', 'Created', 'Action'].map(h => (
                       <th key={h} className="sticky top-0 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-5 py-4 first:pl-6">{h}</th>
                     ))}
@@ -115,16 +173,13 @@ export function Tickets() {
                   {filtered.map((ticket: Ticket, idx: number) => {
                     const next = allowedTransitions[ticket.status];
                     return (
-                      <tr
-                        key={ticket.id}
+                      <tr key={ticket.id}
                         className="border-b border-slate-50 last:border-0 hover:bg-slate-50/80 transition-colors"
-                        style={{ background: idx % 2 === 0 ? 'white' : 'rgba(248,250,252,0.5)' }}
-                      >
+                        style={{ background: idx % 2 === 0 ? 'white' : 'rgba(248,250,252,0.5)' }}>
+
                         <td className="px-6 py-4">
-                          <code
-                            className="text-[11px] font-bold px-2 py-0.5 rounded-lg"
-                            style={{ color: '#6366f1', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}
-                          >
+                          <code className="text-[11px] font-bold px-2 py-0.5 rounded-lg"
+                            style={{ color: '#6366f1', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
                             #{ticket.id}
                           </code>
                         </td>
@@ -158,8 +213,7 @@ export function Tickets() {
                               className={clsx(
                                 'text-[12px] font-semibold rounded-xl px-3 py-1.5 bg-white text-slate-700',
                                 'focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400',
-                                'disabled:opacity-50 disabled:cursor-not-allowed',
-                                'transition-all duration-150 cursor-pointer',
+                                'disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer',
                               )}
                               style={{ border: '1px solid rgba(226,232,240,0.8)', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
                               defaultValue=""
@@ -170,10 +224,8 @@ export function Tickets() {
                               ))}
                             </select>
                           ) : (
-                            <span
-                              className="text-[11px] font-bold px-2.5 py-1 rounded-full"
-                              style={{ color: '#94a3b8', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.2)' }}
-                            >
+                            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full"
+                              style={{ color: '#94a3b8', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.2)' }}>
                               Terminal
                             </span>
                           )}
@@ -185,35 +237,28 @@ export function Tickets() {
               </table>
             </div>
 
-            {/* Pagination */}
-            <div
-              className="px-6 py-4 border-t border-slate-100 flex items-center justify-between"
-              style={{ background: 'rgba(248,250,252,0.6)' }}
-            >
-              <p className="text-xs text-slate-500 font-medium">
-                Page <span className="font-bold text-slate-700">{(data?.page.number ?? 0) + 1}</span> of {totalPages}
-                &ensp;·&ensp;
-                <span className="font-bold text-slate-700">{data?.page.totalElements}</span> tickets total
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary" size="sm"
-                  disabled={page === 0}
-                  onClick={() => setPage(p => p - 1)}
-                  icon={<ChevronLeft className="w-3.5 h-3.5" />}
-                >
-                  Prev
-                </Button>
-                <Button
-                  variant="secondary" size="sm"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage(p => p + 1)}
-                >
-                  Next
-                  <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                </Button>
+            {/* Pagination — only shown when no asset filter */}
+            {!assetSelected && (
+              <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between"
+                style={{ background: 'rgba(248,250,252,0.6)' }}>
+                <p className="text-xs text-slate-500 font-medium">
+                  Page <span className="font-bold text-slate-700">{(pagedData?.page.number ?? 0) + 1}</span> of {totalPages}
+                  &ensp;·&ensp;
+                  <span className="font-bold text-slate-700">{pagedData?.page.totalElements}</span> tickets total
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button variant="secondary" size="sm" disabled={page === 0}
+                    onClick={() => setPage(p => p - 1)}
+                    icon={<ChevronLeft className="w-3.5 h-3.5" />}>
+                    Prev
+                  </Button>
+                  <Button variant="secondary" size="sm" disabled={page >= totalPages - 1}
+                    onClick={() => setPage(p => p + 1)}>
+                    Next <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
       </Card>

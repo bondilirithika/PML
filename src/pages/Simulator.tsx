@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -82,6 +82,7 @@ function ResultCard({ reading }: ResultCardProps) {
 
 export function Simulator() {
   const { canWrite } = useAuth();
+  const qc = useQueryClient();
   const [lastReading, setLastReading] = useState<Reading | null>(null);
   const { data: sensors = [] } = useQuery({ queryKey: ['sensors'], queryFn: sensorsApi.getAll });
 
@@ -94,6 +95,9 @@ export function Simulator() {
     mutationFn: (d: IoTPayloadRequest) => simulatorApi.publish(d),
     onSuccess: (reading) => {
       setLastReading(reading);
+      // A breach reading may have auto-created a ticket — refresh dashboard counts immediately
+      qc.invalidateQueries({ queryKey: ['tickets'] });
+      qc.invalidateQueries({ queryKey: ['assets', 'violations'] });
       toast.success('IoT payload published and evaluated');
     },
   });
@@ -200,7 +204,7 @@ export function Simulator() {
               />
             </div>
             <Input
-              label="Timestamp" required type="datetime-local"
+              label="Timestamp" required type="datetime-local" step="1"
               error={errors.ts?.message}
               {...register('ts')}
             />
