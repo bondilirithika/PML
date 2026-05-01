@@ -65,8 +65,8 @@ export function Readings() {
     queryFn: () =>
       readingsApi.getPage({
         sensorId: sensorId,
-        from: from ? new Date(from).toISOString().replace('Z', '') : undefined,
-        to:   to   ? new Date(to).toISOString().replace('Z', '')   : undefined,
+        from: from ? `${from}:00` : undefined,
+        to:   to   ? `${to}:00`   : undefined,
         page,
         size: 50,
       }),

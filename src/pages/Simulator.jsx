@@ -5,12 +5,13 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { simulatorApi } from '../api/simulator';
 import { sensorsApi } from '../api/sensors';
+import { thresholdsApi } from '../api/thresholds';
 import { Card, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { PageHeader } from '../components/ui/PageHeader';
-import { Radio, CheckCircle2, AlertTriangle, Zap, Cpu, ChevronRight, Lock } from 'lucide-react';
+import { Radio, CheckCircle2, AlertTriangle, Zap, Cpu, ChevronRight, Lock, Activity, Thermometer } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { formatDate, formatRms, formatTemp } from '../utils/formatters';
 import { format } from 'date-fns';
@@ -78,7 +79,15 @@ export function Simulator() {
   const { canWrite } = useAuth();
   const qc = useQueryClient();
   const [lastReading, setLastReading] = useState(null);
+  const [selectedSensor, setSelectedSensor] = useState(null);
+
   const { data: sensors = [] } = useQuery({ queryKey: ['sensors'], queryFn: sensorsApi.getAll });
+
+  const { data: threshold } = useQuery({
+    queryKey: ['threshold', 'by-asset', selectedSensor?.assetId],
+    queryFn: () => thresholdsApi.getByAsset(selectedSensor.assetId),
+    enabled: !!selectedSensor?.assetId,
+  });
 
   const { register, handleSubmit, setValue, formState: { errors }, watch } = useForm({
     resolver: zodResolver(schema),
@@ -90,6 +99,7 @@ export function Simulator() {
     onSuccess: (reading) => {
       setLastReading(reading);
       qc.invalidateQueries({ queryKey: ['tickets'] });
+      qc.invalidateQueries({ queryKey: ['readings'] });
       qc.invalidateQueries({ queryKey: ['assets', 'violations'] });
       toast.success('IoT payload published and evaluated');
     },
@@ -97,12 +107,17 @@ export function Simulator() {
 
   const handleSensorSelect = (e) => {
     const sensor = sensors.find(s => s.id === Number(e.target.value));
-    if (sensor?.serialNumber) setValue('deviceId', sensor.serialNumber);
+    if (sensor) {
+      setSelectedSensor(sensor);
+      if (sensor.serialNumber) setValue('deviceId', sensor.serialNumber);
+    }
   };
 
   const currentRms  = Number(watch('rms'))  || 0;
   const currentTemp = Number(watch('temp')) || 0;
-  const willBreach  = currentRms > 5 || currentTemp > 95;
+  const rmsLimit    = threshold?.rmsMax  ?? null;
+  const tempLimit   = threshold?.tempMax ?? null;
+  const willBreach  = (rmsLimit != null && currentRms > rmsLimit) || (tempLimit != null && currentTemp > tempLimit);
   const hasValues   = currentRms > 0 || currentTemp > 0;
 
   if (!canWrite) {
@@ -167,6 +182,27 @@ export function Simulator() {
               placeholder="Select a sensor to auto-fill deviceId..."
               onChange={handleSensorSelect}
             />
+            {threshold && (
+              <div className="mt-3 pt-3 border-t border-slate-200 flex flex-wrap items-center gap-5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Thresholds — {threshold.assetName}
+                </span>
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+                  <span className="w-5 h-5 rounded-lg flex items-center justify-center"
+                    style={{ background: 'rgba(99,102,241,0.1)' }}>
+                    <Activity className="w-3 h-3 text-violet-500" />
+                  </span>
+                  RMS max: <strong className="text-violet-700">{threshold.rmsMax} mm/s</strong>
+                </span>
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+                  <span className="w-5 h-5 rounded-lg flex items-center justify-center"
+                    style={{ background: 'rgba(245,158,11,0.1)' }}>
+                    <Thermometer className="w-3 h-3 text-amber-500" />
+                  </span>
+                  Temp max: <strong className="text-amber-700">{threshold.tempMax}°C</strong>
+                </span>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit(d => mutation.mutate(d))} className="space-y-4">
@@ -182,14 +218,14 @@ export function Simulator() {
               <Input
                 label="RMS (mm/s)" required type="number" step="0.01"
                 error={errors.rms?.message}
-                hint="Normal: 1–4.5 | Breach: >5.0"
+                hint={rmsLimit != null ? `Max allowed: ${rmsLimit} mm/s` : 'Select a sensor to see threshold'}
                 {...register('rms')}
                 placeholder="7.5"
               />
               <Input
                 label="Temperature (°C)" required type="number" step="0.1"
                 error={errors.temp?.message}
-                hint="Normal: 40–80°C | Breach: >95°C"
+                hint={tempLimit != null ? `Max allowed: ${tempLimit}°C` : 'Select a sensor to see threshold'}
                 {...register('temp')}
                 placeholder="98.0"
               />
@@ -200,7 +236,7 @@ export function Simulator() {
               {...register('ts')}
             />
 
-            {hasValues && (
+            {hasValues && threshold && (
               <div
                 className={clsx(
                   'flex items-center gap-3 text-sm rounded-xl p-4 transition-all duration-300',
@@ -237,7 +273,7 @@ export function Simulator() {
                   ) : (
                     <>
                       <p className="font-extrabold text-emerald-700 text-sm">Reading looks normal</p>
-                      <p className="text-xs text-emerald-500 font-medium mt-0.5">Unlikely to trigger a ticket</p>
+                      <p className="text-xs text-emerald-500 font-medium mt-0.5">Within threshold — no ticket will be raised</p>
                     </>
                   )}
                 </div>
