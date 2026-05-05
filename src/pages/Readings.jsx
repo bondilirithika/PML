@@ -39,14 +39,11 @@ function ChartTooltip({ active, payload, label, unit }) {
   );
 }
 
-const defaultFrom = format(subDays(new Date(), 7), "yyyy-MM-dd'T'HH:mm");
-const defaultTo   = format(new Date(),              "yyyy-MM-dd'T'HH:mm");
-
 export function Readings() {
   const [assetId,  setAssetId]  = useState(null);
   const [sensorId, setSensorId] = useState(null);
-  const [from,     setFrom]     = useState(defaultFrom);
-  const [to,       setTo]       = useState(defaultTo);
+  const [from,     setFrom]     = useState(() => format(subDays(new Date(), 7), "yyyy-MM-dd'T'HH:mm"));
+  const [to,       setTo]       = useState(() => format(new Date(),              "yyyy-MM-dd'T'HH:mm"));
   const [page,     setPage]     = useState(0);
 
   const { data: assets = [] }  = useQuery({ queryKey: ['assets'],  queryFn: assetsApi.getAll });
@@ -74,15 +71,15 @@ export function Readings() {
   });
 
   const readings   = data?.content ?? [];
-  const totalPages = data?.page.totalPages ?? 1;
+  const totalPages = data?.page?.totalPages ?? 1;
   const rmsMax     = threshold?.rmsMax  ?? null;
   const tempMax    = threshold?.tempMax ?? null;
 
   const chartData = useMemo(() =>
     [...readings].reverse().map(r => ({
       time: format(parseISO(r.timestamp), 'dd/MM HH:mm'),
-      rms:  +r.rms.toFixed(2),
-      temp: +r.temperature.toFixed(1),
+      rms:  r.rms        != null ? +r.rms.toFixed(2)         : null,
+      temp: r.temperature != null ? +r.temperature.toFixed(1) : null,
     })),
     [readings]
   );
@@ -334,7 +331,7 @@ export function Readings() {
               <div>
                 <h3 className="text-[15px] font-extrabold text-slate-900 tracking-tight">Raw Readings</h3>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  {data?.page.totalElements ?? 0} readings in selected range
+                  {data?.page?.totalElements ?? 0} readings in selected range
                 </p>
               </div>
             </div>
@@ -448,9 +445,9 @@ export function Readings() {
                   style={{ background: 'rgba(248,250,252,0.6)' }}
                 >
                   <p className="text-xs text-slate-500 font-medium">
-                    Page <span className="font-bold text-slate-700">{(data?.page.number ?? 0) + 1}</span> of {totalPages}
+                    Page <span className="font-bold text-slate-700">{(data?.page?.number ?? 0) + 1}</span> of {totalPages}
                     &ensp;·&ensp;
-                    <span className="font-bold text-slate-700">{data?.page.totalElements}</span> total readings
+                    <span className="font-bold text-slate-700">{data?.page?.totalElements}</span> total readings
                   </p>
                   <div className="flex items-center gap-2">
                     <Button

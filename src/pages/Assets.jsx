@@ -329,6 +329,7 @@ export function Assets() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['assets'] });
       qc.invalidateQueries({ queryKey: ['thresholds'] });
+      qc.invalidateQueries({ queryKey: ['threshold'] });
       setEditAsset(null);
       toast.success('Asset updated');
     },
@@ -343,6 +344,10 @@ export function Assets() {
       qc.invalidateQueries({ queryKey: ['sensors'] });
       setDeleteId(null);
       toast.success('Asset deleted');
+    },
+    onError: (err) => {
+      setDeleteId(null);
+      toast.error(err.response?.data?.message ?? 'Failed to delete asset');
     },
   });
 
@@ -393,6 +398,10 @@ export function Assets() {
       qc.invalidateQueries({ queryKey: ['sensors'] });
       setDeleteSensorId(null);
       toast.success('Sensor deleted');
+    },
+    onError: (err) => {
+      setDeleteSensorId(null);
+      toast.error(err.response?.data?.message ?? 'Failed to delete sensor');
     },
   });
 

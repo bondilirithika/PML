@@ -101,6 +101,7 @@ export function Simulator() {
       qc.invalidateQueries({ queryKey: ['tickets'] });
       qc.invalidateQueries({ queryKey: ['readings'] });
       qc.invalidateQueries({ queryKey: ['assets', 'violations'] });
+      qc.invalidateQueries({ queryKey: ['assets', 'avg-rms'] });
       toast.success('IoT payload published and evaluated');
     },
   });

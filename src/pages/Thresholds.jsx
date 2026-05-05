@@ -72,17 +72,35 @@ export function Thresholds() {
 
   const createMutation = useMutation({
     mutationFn: (d) => thresholdsApi.create(d),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['thresholds'] }); setCreateOpen(false); toast.success('Threshold created'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['thresholds'] });
+      qc.invalidateQueries({ queryKey: ['threshold'] });
+      setCreateOpen(false);
+      toast.success('Threshold created');
+    },
+    onError: (err) => toast.error(err.response?.data?.message ?? 'Failed to create threshold'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => thresholdsApi.update(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['thresholds'] }); setEditThreshold(null); toast.success('Threshold updated'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['thresholds'] });
+      qc.invalidateQueries({ queryKey: ['threshold'] });
+      setEditThreshold(null);
+      toast.success('Threshold updated');
+    },
+    onError: (err) => toast.error(err.response?.data?.message ?? 'Failed to update threshold'),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => thresholdsApi.delete(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['thresholds'] }); setDeleteId(null); toast.success('Threshold deleted'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['thresholds'] });
+      qc.invalidateQueries({ queryKey: ['threshold'] });
+      setDeleteId(null);
+      toast.success('Threshold deleted');
+    },
+    onError: (err) => toast.error(err.response?.data?.message ?? 'Failed to delete threshold'),
   });
 
   return (

@@ -1,13 +1,13 @@
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 
 export const formatDate = (iso) =>
-  format(parseISO(iso), 'dd MMM yyyy, HH:mm');
+  iso ? format(parseISO(iso), 'dd MMM yyyy, HH:mm') : '—';
 
 export const formatDateShort = (iso) =>
-  format(parseISO(iso), 'dd MMM yyyy');
+  iso ? format(parseISO(iso), 'dd MMM yyyy') : '—';
 
 export const formatRelative = (iso) =>
-  formatDistanceToNow(parseISO(iso), { addSuffix: true });
+  iso ? formatDistanceToNow(parseISO(iso), { addSuffix: true }) : '—';
 
 export const formatRms = (v) => v.toFixed(2);
 export const formatTemp = (v) => `${v.toFixed(1)}°C`;

@@ -86,10 +86,10 @@ function AddUserForm({ onSubmit, loading }) {
 export function Users() {
   const qc = useQueryClient();
   const { user: currentUser, isAdmin } = useAuth();
-
-  if (!isAdmin) return <Navigate to="/" replace />;
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteId,   setDeleteId]   = useState(null);
+
+  if (!isAdmin) return <Navigate to="/" replace />;
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],

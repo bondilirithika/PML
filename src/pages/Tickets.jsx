@@ -64,8 +64,8 @@ export function Tickets() {
     ? baseTickets.filter(t => t.status === statusFilter)
     : baseTickets;
 
-  const totalPages   = assetSelected ? 1 : (pagedData?.page.totalPages ?? 1);
-  const totalCount   = assetSelected ? filtered.length : (pagedData?.page.totalElements ?? 0);
+  const totalPages   = assetSelected ? 1 : (pagedData?.page?.totalPages ?? 1);
+  const totalCount   = assetSelected ? filtered.length : (pagedData?.page?.totalElements ?? 0);
   const activeFilters = (statusFilter ? 1 : 0) + (assetSelected ? 1 : 0);
 
   const updateMutation = useMutation({
@@ -75,6 +75,10 @@ export function Tickets() {
       qc.invalidateQueries({ queryKey: ['tickets'] });
       setUpdatingId(null);
       toast.success('Ticket status updated');
+    },
+    onError: (err) => {
+      setUpdatingId(null);
+      toast.error(err.response?.data?.message ?? 'Failed to update ticket status');
     },
   });
 
@@ -234,9 +238,9 @@ export function Tickets() {
               <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between"
                 style={{ background: 'rgba(248,250,252,0.6)' }}>
                 <p className="text-xs text-slate-500 font-medium">
-                  Page <span className="font-bold text-slate-700">{(pagedData?.page.number ?? 0) + 1}</span> of {totalPages}
+                  Page <span className="font-bold text-slate-700">{(pagedData?.page?.number ?? 0) + 1}</span> of {totalPages}
                   &ensp;·&ensp;
-                  <span className="font-bold text-slate-700">{pagedData?.page.totalElements}</span> tickets total
+                  <span className="font-bold text-slate-700">{pagedData?.page?.totalElements}</span> tickets total
                 </p>
                 <div className="flex items-center gap-2">
                   <Button variant="secondary" size="sm" disabled={page === 0}
