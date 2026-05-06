@@ -2,16 +2,16 @@ import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const routeMeta = {
-  '/assets':    'Assets',
-  '/sensors':   'Sensors',
-  '/readings':  'Readings',
-  '/tickets':   'Tickets',
+  '/assets':     'Assets',
+  '/sensors':    'Sensors',
+  '/readings':   'Readings',
+  '/tickets':    'Tickets',
   '/simulator':  'IoT Simulator',
   '/thresholds': 'Thresholds',
   '/users':      'Users',
 };
 
-export function Header({ sidebarOpen }) {
+export function Header({ sidebarW }) {
   const { pathname } = useLocation();
   const pageName = routeMeta[pathname];
   const { user, isAdmin, isManager } = useAuth();
@@ -31,7 +31,7 @@ export function Header({ sidebarOpen }) {
   return (
     <header
       className="fixed top-0 right-0 h-[65px] z-20 flex items-center justify-between px-6 glass-header transition-all duration-300"
-      style={{ left: sidebarOpen ? 232 : 0 }}
+      style={{ left: sidebarW }}
     >
       <div>
         {pageName ? (
