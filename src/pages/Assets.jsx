@@ -24,9 +24,17 @@ import { sensorTypeLabel, sensorTypeStyle } from '../utils/formatters';
 import toast from 'react-hot-toast';
 
 const sensorSchema = z.object({
-  name:         z.string().min(1, 'Name is required').max(100),
-  serialNumber: z.string().min(1, 'Serial number is required').max(100),
-  sensorType:   z.enum(['VIBRATION', 'TEMPERATURE', 'COMBINED']),
+  name:         z.string()
+                  .min(1, 'Sensor name is required')
+                  .min(2, 'Sensor name must be at least 2 characters')
+                  .max(100, 'Sensor name cannot exceed 100 characters'),
+  serialNumber: z.string()
+                  .min(1, 'Serial number is required')
+                  .max(100, 'Serial number cannot exceed 100 characters')
+                  .regex(/^[A-Za-z0-9][A-Za-z0-9\-]+$/, 'Use letters, numbers and hyphens only, no spaces (e.g. SN-PUMP01-VIB)'),
+  sensorType:   z.enum(['VIBRATION', 'TEMPERATURE', 'COMBINED'], {
+                  errorMap: () => ({ message: 'Please select a sensor type' }),
+                }),
 });
 
 function SensorForm({ onSubmit, defaultValues, loading, onCancel, isEdit }) {
@@ -69,12 +77,19 @@ function SensorForm({ onSubmit, defaultValues, loading, onCancel, isEdit }) {
 }
 
 const assetThresholdSchema = z.object({
-  name:        z.string().min(1, 'Name is required').max(100),
-  location:    z.string().max(200).optional().or(z.literal('')),
-  assetType:   z.string().max(50).optional().or(z.literal('')),
-  description: z.string().max(500).optional().or(z.literal('')),
-  rmsMax:      z.coerce.number({ invalid_type_error: 'Required' }).positive('Must be > 0'),
-  tempMax:     z.coerce.number({ invalid_type_error: 'Required' }).positive('Must be > 0'),
+  name:        z.string()
+                 .min(1, 'Asset name is required')
+                 .min(2, 'Asset name must be at least 2 characters')
+                 .max(100, 'Asset name cannot exceed 100 characters'),
+  location:    z.string().max(200, 'Location cannot exceed 200 characters').optional().or(z.literal('')),
+  assetType:   z.string().max(50, 'Asset type cannot exceed 50 characters').optional().or(z.literal('')),
+  description: z.string().max(500, 'Description cannot exceed 500 characters').optional().or(z.literal('')),
+  rmsMax:      z.coerce.number({ invalid_type_error: 'RMS threshold is required' })
+                 .positive('Must be greater than 0')
+                 .max(50, 'RMS threshold cannot exceed 50 mm/s'),
+  tempMax:     z.coerce.number({ invalid_type_error: 'Temperature threshold is required' })
+                 .positive('Must be greater than 0')
+                 .max(250, 'Temperature threshold cannot exceed 250 °C'),
 });
 
 function ThresholdSection({ errors, register }) {
@@ -117,14 +132,16 @@ function CreateAssetForm({ onSubmit, loading }) {
   const [sensorListError, setSensorListError] = useState('');
 
   function addSensor() {
-    if (!draft.name.trim())         { setDraftError('Name is required'); return; }
-    if (!draft.serialNumber.trim()) { setDraftError('Serial number is required'); return; }
-    if (!draft.sensorType)          { setDraftError('Type is required'); return; }
-    setPendingSensors(prev => [...prev, {
+    const result = sensorSchema.safeParse({
       name:         draft.name.trim(),
       serialNumber: draft.serialNumber.trim(),
       sensorType:   draft.sensorType,
-    }]);
+    });
+    if (!result.success) {
+      setDraftError(result.error.errors[0].message);
+      return;
+    }
+    setPendingSensors(prev => [...prev, result.data]);
     setDraft({ name: '', serialNumber: '', sensorType: '' });
     setDraftError('');
     setSensorListError('');
@@ -192,7 +209,7 @@ function CreateAssetForm({ onSubmit, loading }) {
                 onChange={e => { setDraft(d => ({ ...d, name: e.target.value })); setDraftError(''); }}
                 placeholder="e.g. Vibration A" />
               <Input label="Serial Number" required value={draft.serialNumber}
-                onChange={e => setDraft(d => ({ ...d, serialNumber: e.target.value }))}
+                onChange={e => { setDraft(d => ({ ...d, serialNumber: e.target.value })); setDraftError(''); }}
                 placeholder="SN-PUMP01-VIB" />
             </div>
             <Select
@@ -311,7 +328,7 @@ export function Assets() {
       setCreateOpen(false);
       toast.success('Asset created');
     },
-    onError: () => toast.error('Failed to create asset'),
+    onError: (err) => toast.error(err.response?.data?.message ?? 'Failed to create asset'),
   });
 
   const updateMutation = useMutation({
@@ -368,7 +385,7 @@ export function Assets() {
       setShowSensorForm(false);
       toast.success('Sensor added');
     },
-    onError: () => toast.error('Failed to add sensor'),
+    onError: (err) => toast.error(err.response?.data?.message ?? 'Failed to add sensor'),
   });
 
   const sensorUpdateMutation = useMutation({
@@ -380,7 +397,7 @@ export function Assets() {
       setShowSensorForm(false);
       toast.success('Sensor updated');
     },
-    onError: () => toast.error('Failed to update sensor'),
+    onError: (err) => toast.error(err.response?.data?.message ?? 'Failed to update sensor'),
   });
 
   const sensorStatusMutation = useMutation({

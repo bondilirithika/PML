@@ -19,10 +19,29 @@ import { formatDate } from '../utils/formatters';
 import toast from 'react-hot-toast';
 
 const schema = z.object({
-  username: z.string().min(3, 'Min 3 characters').max(50),
-  email:    z.string().email('Invalid email').max(100),
-  password: z.string().min(6, 'Min 6 characters').max(100),
-  role:     z.enum(['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_TECHNICIAN'], { required_error: 'Role is required' }),
+  username: z
+    .string()
+    .min(1, 'Username is required')
+    .min(3, 'Username must be at least 3 characters')
+    .max(20, 'Username cannot exceed 20 characters')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers and underscores allowed'),
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Invalid email address')
+    .max(100, 'Email cannot exceed 100 characters'),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .min(8, 'Password must be at least 8 characters')
+    .max(64, 'Password cannot exceed 64 characters')
+    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Must contain at least one number')
+    .regex(/[!@#$%^&*]/, 'Must contain at least one special character (!@#$%^&*)'),
+  role: z.enum(['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_TECHNICIAN'], {
+    errorMap: () => ({ message: 'Please select a role' }),
+  }),
 });
 
 const roleLabel = {
@@ -61,7 +80,7 @@ function AddUserForm({ onSubmit, loading }) {
       <Input
         label="Password" required type="password"
         error={errors.password?.message}
-        hint="Minimum 6 characters"
+        hint="Min 8 chars, uppercase, lowercase, number, special character"
         {...register('password')}
         placeholder="••••••••"
       />

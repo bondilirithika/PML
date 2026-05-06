@@ -17,7 +17,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, ReferenceLine, Area, AreaChart,
 } from 'recharts';
-import { format, parseISO, subDays } from 'date-fns';
+import { format, parseISO, subDays, endOfDay } from 'date-fns';
 
 function BreachDot({ cx = 0, cy = 0, value = 0, threshold }) {
   if (value <= threshold) return null;
@@ -43,7 +43,7 @@ export function Readings() {
   const [assetId,  setAssetId]  = useState(null);
   const [sensorId, setSensorId] = useState(null);
   const [from,     setFrom]     = useState(() => format(subDays(new Date(), 7), "yyyy-MM-dd'T'HH:mm"));
-  const [to,       setTo]       = useState(() => format(new Date(),              "yyyy-MM-dd'T'HH:mm"));
+  const [to,       setTo]       = useState(() => format(endOfDay(new Date()),   "yyyy-MM-dd'T'HH:mm"));
   const [page,     setPage]     = useState(0);
 
   const { data: assets = [] }  = useQuery({ queryKey: ['assets'],  queryFn: assetsApi.getAll });
@@ -87,8 +87,8 @@ export function Readings() {
   const handleReset = () => {
     setAssetId(null);
     setSensorId(null);
-    setFrom(defaultFrom);
-    setTo(defaultTo);
+    setFrom(format(subDays(new Date(), 7), "yyyy-MM-dd'T'HH:mm"));
+    setTo(format(endOfDay(new Date()),     "yyyy-MM-dd'T'HH:mm"));
     setPage(0);
   };
 
