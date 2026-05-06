@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Filter, Ticket as TicketIcon, X } from 'lucide-react';
 import { ticketsApi } from '../api/tickets';
@@ -33,8 +34,9 @@ function PriorityDot({ status }) {
 export function Tickets() {
   const qc = useQueryClient();
   const { canWrite } = useAuth();
+  const { state: locationState } = useLocation();
   const [page,         setPage]         = useState(0);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(locationState?.statusFilter ?? '');
   const [assetFilter,  setAssetFilter]  = useState('');
   const [updatingId,   setUpdatingId]   = useState(null);
 

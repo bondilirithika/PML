@@ -152,7 +152,7 @@ export function Dashboard() {
               iconShadow="rgba(16,185,129,0.40)"
               accentColor="#10b981"
               accent="Collecting telemetry now"
-              onClick={() => navigate('/sensors')}
+              onClick={() => navigate('/sensors', { state: { activeOnly: true } })}
             />
             <KpiCard
               label="Open Tickets"
@@ -163,7 +163,7 @@ export function Dashboard() {
               accentColor="#ef4444"
               trend={openCount?.openTickets ? `${openCount.openTickets} unattended` : undefined}
               trendUp={false}
-              onClick={() => navigate('/tickets')}
+              onClick={() => navigate('/tickets', { state: { statusFilter: 'OPEN' } })}
             />
             <KpiCard
               label="Violations (24h)"
@@ -173,7 +173,7 @@ export function Dashboard() {
               iconShadow="rgba(245,158,11,0.40)"
               accentColor="#f59e0b"
               accent="Threshold breaches detected"
-              onClick={() => navigate('/assets')}
+              onClick={() => navigate('/assets', { state: { violationsOnly: true } })}
             />
           </>
         )}
@@ -267,7 +267,7 @@ export function Dashboard() {
                 {violations.map(asset => (
                   <li
                     key={asset.id}
-                    onClick={() => navigate('/assets')}
+                    onClick={() => navigate('/assets', { state: { violationsOnly: true } })}
                     className="flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md"
                     style={{
                       background: 'linear-gradient(135deg, rgba(254,243,199,0.7), rgba(253,230,138,0.35))',

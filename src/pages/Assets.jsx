@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Pencil, Trash2, MapPin, Tag, CheckCircle2, XCircle,
@@ -278,6 +279,8 @@ function EditAssetForm({ onSubmit, defaultValues, loading }) {
 export function Assets() {
   const qc = useQueryClient();
   const { canWrite, canDelete } = useAuth();
+  const { state: locationState } = useLocation();
+  const [violationsOnly, setViolationsOnly] = useState(locationState?.violationsOnly ?? false);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editAsset,  setEditAsset]  = useState(null);
@@ -291,6 +294,7 @@ export function Assets() {
   const { data: assets,     isLoading } = useQuery({ queryKey: ['assets'],     queryFn: assetsApi.getAll });
   const { data: thresholds }            = useQuery({ queryKey: ['thresholds'], queryFn: thresholdsApi.getAll });
   const { data: sensors }               = useQuery({ queryKey: ['sensors'],    queryFn: sensorsApi.getAll });
+  const { data: violations }            = useQuery({ queryKey: ['assets', 'violations'], queryFn: assetsApi.getViolations, enabled: violationsOnly });
 
   const thresholdMap = useMemo(() => {
     const map = new Map();
@@ -443,27 +447,44 @@ export function Assets() {
     setEditingSensor(null);
   }
 
+  const violationIds = useMemo(() => new Set((violations ?? []).map(a => a.id)), [violations]);
+  const displayedAssets = useMemo(() => {
+    if (!violationsOnly || !assets) return assets ?? [];
+    return assets.filter(a => violationIds.has(a.id));
+  }, [assets, violationsOnly, violationIds]);
+
   const headers = ['Name', 'Type', 'Location', 'Sensors', 'Thresholds', 'Status', ...(canWrite || canDelete ? ['Actions'] : [])];
 
   return (
     <>
       <PageHeader
         title="Assets"
-        subtitle={`${assets?.length ?? 0} industrial assets registered`}
-        action={canWrite ? (
-          <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>New Asset</Button>
-        ) : undefined}
+        subtitle={`${displayedAssets.length} ${violationsOnly ? 'assets with violations' : 'industrial assets registered'}`}
+        action={
+          <div className="flex items-center gap-2">
+            {violationsOnly && (
+              <button
+                onClick={() => setViolationsOnly(false)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-colors"
+                style={{ background: 'rgba(245,158,11,0.1)', color: '#b45309', border: '1px solid rgba(245,158,11,0.25)' }}
+              >
+                <X className="w-3 h-3" /> Violations only
+              </button>
+            )}
+            {canWrite && <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>New Asset</Button>}
+          </div>
+        }
       />
 
       <Card padding={false}>
         {isLoading ? (
           <div className="p-6"><SkeletonTable /></div>
-        ) : (assets?.length ?? 0) === 0 ? (
+        ) : displayedAssets.length === 0 ? (
           <EmptyState
             icon={<Server className="w-7 h-7" />}
-            title="No assets yet"
-            description="Add your first piece of equipment to start monitoring"
-            action={canWrite ? <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Asset</Button> : undefined}
+            title={violationsOnly ? 'No violated assets' : 'No assets yet'}
+            description={violationsOnly ? 'No threshold breaches in the last 24 hours' : 'Add your first piece of equipment to start monitoring'}
+            action={canWrite && !violationsOnly ? <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Asset</Button> : undefined}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -479,7 +500,7 @@ export function Assets() {
                 </tr>
               </thead>
               <tbody>
-                {assets.map((asset, idx) => {
+                {displayedAssets.map((asset, idx) => {
                   const threshold = thresholdMap.get(asset.id);
                   const assetSensors = sensorMap.get(asset.id) ?? [];
                   return (

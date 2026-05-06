@@ -1,5 +1,7 @@
+import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, XCircle, Radio, Power, PowerOff } from 'lucide-react';
+import { CheckCircle2, XCircle, Radio, Power, PowerOff, X } from 'lucide-react';
 import { sensorsApi } from '../api/sensors';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -13,8 +15,12 @@ import toast from 'react-hot-toast';
 export function Sensors() {
   const qc = useQueryClient();
   const { canWrite } = useAuth();
+  const { state: locationState } = useLocation();
+  const [activeOnly, setActiveOnly] = useState(locationState?.activeOnly ?? false);
 
   const { data: sensors, isLoading } = useQuery({ queryKey: ['sensors'], queryFn: sensorsApi.getAll });
+
+  const displayed = activeOnly ? (sensors ?? []).filter(s => s.active) : (sensors ?? []);
 
   const statusMutation = useMutation({
     mutationFn: ({ id, active }) => sensorsApi.setStatus(id, active),
@@ -29,17 +35,28 @@ export function Sensors() {
     <>
       <PageHeader
         title="Sensors"
-        subtitle={`${sensors?.length ?? 0} sensors across all assets — manage sensors from the Assets page`}
+        subtitle={`${displayed.length} ${activeOnly ? 'active' : 'total'} sensors across all assets`}
+        action={
+          activeOnly ? (
+            <button
+              onClick={() => setActiveOnly(false)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-colors"
+              style={{ background: 'rgba(16,185,129,0.1)', color: '#047857', border: '1px solid rgba(16,185,129,0.25)' }}
+            >
+              <X className="w-3 h-3" /> Active only
+            </button>
+          ) : undefined
+        }
       />
 
       <Card padding={false}>
         {isLoading ? (
           <div className="p-6"><SkeletonTable /></div>
-        ) : (sensors?.length ?? 0) === 0 ? (
+        ) : displayed.length === 0 ? (
           <EmptyState
             icon={<Radio className="w-7 h-7" />}
-            title="No sensors registered"
-            description="Go to the Assets page and click on an asset's sensor count to add sensors"
+            title={activeOnly ? 'No active sensors' : 'No sensors registered'}
+            description={activeOnly ? 'All sensors are currently inactive' : 'Go to the Assets page and click on an asset\'s sensor count to add sensors'}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -53,7 +70,7 @@ export function Sensors() {
                 </tr>
               </thead>
               <tbody>
-                {sensors.map((s, idx) => (
+                {displayed.map((s, idx) => (
                   <tr key={s.id}
                     className="border-b border-slate-50 last:border-0 hover:bg-emerald-50/30 transition-colors"
                     style={{ background: idx % 2 === 0 ? 'white' : 'rgba(248,250,252,0.5)' }}>
