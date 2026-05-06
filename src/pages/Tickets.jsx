@@ -69,8 +69,7 @@ export function Tickets() {
   const activeFilters = (statusFilter ? 1 : 0) + (assetSelected ? 1 : 0);
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }) =>
-      ticketsApi.updateStatus(id, status),
+    mutationFn: ({ id, status }) => ticketsApi.updateStatus(id, status),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tickets'] });
       setUpdatingId(null);
@@ -157,13 +156,26 @@ export function Tickets() {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" style={{ minWidth: 760, tableLayout: 'fixed' }}>
+                <colgroup>
+                  <col style={{ width: '6%' }} />
+                  <col style={{ width: '15%' }} />
+                  <col style={{ width: '13%' }} />
+                  <col style={{ width: '12%' }} />
+                  <col style={{ width: '27%' }} />
+                  <col style={{ width: '15%' }} />
+                  <col style={{ width: '12%' }} />
+                </colgroup>
                 <thead>
                   <tr className="border-b border-slate-100"
                     style={{ background: 'linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.8))' }}>
-                    {['#', 'Asset', 'Sensor', 'Status', 'Description', 'Created', 'Action'].map(h => (
-                      <th key={h} className="sticky top-0 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-5 py-4 first:pl-6">{h}</th>
-                    ))}
+                    <th className="text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-6 pr-3 py-4">#</th>
+                    <th className="text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-3 py-4">Asset</th>
+                    <th className="text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-3 py-4">Sensor</th>
+                    <th className="text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-3 py-4">Status</th>
+                    <th className="text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-3 py-4">Description</th>
+                    <th className="text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-3 py-4">Created</th>
+                    <th className="text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-3 py-4 pr-6">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -174,31 +186,33 @@ export function Tickets() {
                         className="border-b border-slate-50 last:border-0 hover:bg-slate-50/80 transition-colors"
                         style={{ background: idx % 2 === 0 ? 'white' : 'rgba(248,250,252,0.5)' }}>
 
-                        <td className="px-6 py-4">
+                        <td className="pl-6 pr-3 py-4">
                           <code className="text-[11px] font-bold px-2 py-0.5 rounded-lg"
                             style={{ color: '#6366f1', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
                             #{ticket.id}
                           </code>
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-3 py-4 overflow-hidden">
                           <div className="flex items-center gap-2">
                             <PriorityDot status={ticket.status} />
-                            <span className="font-bold text-slate-900">{ticket.assetName}</span>
+                            <span className="font-bold text-slate-900 truncate">{ticket.assetName}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-slate-500 font-medium">{ticket.sensorName}</td>
-                        <td className="px-5 py-4">
+                        <td className="px-3 py-4 text-slate-500 font-medium overflow-hidden">
+                          <span className="truncate block">{ticket.sensorName}</span>
+                        </td>
+                        <td className="px-3 py-4">
                           <Badge dot label={ticketStatusLabel[ticket.status]} className={ticketStatusColors[ticket.status]} />
                         </td>
-                        <td className="px-5 py-4 text-slate-600 max-w-xs">
+                        <td className="px-3 py-4 text-slate-600 overflow-hidden">
                           <span className="truncate block text-[13px]" title={ticket.description}>{ticket.description}</span>
                         </td>
-                        <td className="px-5 py-4 whitespace-nowrap">
+                        <td className="px-3 py-4 whitespace-nowrap">
                           <div className="text-[12px] font-semibold text-slate-700">{formatRelative(ticket.createdAt)}</div>
                           <div className="text-[11px] text-slate-400 mt-0.5">{formatDate(ticket.createdAt)}</div>
                         </td>
-                        <td className="px-5 py-4">
-                          {next.length > 0 ? (
+                        <td className="px-3 py-4 pr-6">
+                          {canWrite && next.length > 0 ? (
                             <select
                               disabled={updatingId === ticket.id || updateMutation.isPending}
                               onChange={e => {
@@ -208,7 +222,7 @@ export function Tickets() {
                                 e.target.value = '';
                               }}
                               className={clsx(
-                                'text-[12px] font-semibold rounded-xl px-3 py-1.5 bg-white text-slate-700',
+                                'w-full text-[12px] font-semibold rounded-xl px-3 py-1.5 bg-white text-slate-700',
                                 'focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400',
                                 'disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer',
                               )}
@@ -223,7 +237,7 @@ export function Tickets() {
                           ) : (
                             <span className="text-[11px] font-bold px-2.5 py-1 rounded-full"
                               style={{ color: '#94a3b8', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.2)' }}>
-                              Terminal
+                              {canWrite ? 'Terminal' : '—'}
                             </span>
                           )}
                         </td>
