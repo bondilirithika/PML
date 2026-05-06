@@ -349,7 +349,7 @@ export function Readings() {
                         className="border-b border-slate-100"
                         style={{ background: 'linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.8))' }}
                       >
-                        {['#', 'Timestamp', 'RMS (mm/s)', 'Temperature', 'Breach', 'Processed'].map(h => (
+                        {['#', 'Timestamp', 'RMS (mm/s)', 'Temperature', 'Breach'].map(h => (
                           <th key={h} className="sticky top-0 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-5 py-3.5 first:pl-6">{h}</th>
                         ))}
                       </tr>
@@ -416,22 +416,6 @@ export function Readings() {
                                   Normal
                                 </span>
                               )}
-                            </td>
-                            <td className="px-5 py-3.5">
-                              {r.processed
-                                ? <span
-                                    className="text-[11px] font-bold px-2.5 py-1 rounded-full"
-                                    style={{ color: '#047857', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}
-                                  >
-                                    Done
-                                  </span>
-                                : <span
-                                    className="text-[11px] font-bold px-2.5 py-1 rounded-full"
-                                    style={{ color: '#92400e', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}
-                                  >
-                                    Pending
-                                  </span>
-                              }
                             </td>
                           </tr>
                         );
