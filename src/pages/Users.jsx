@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Trash2, ShieldCheck, Users as UsersIcon, Crown, Wrench } from 'lucide-react';
+import { Plus, Trash2, ShieldCheck, Users as UsersIcon, Crown, Wrench, Power, PowerOff } from 'lucide-react';
 import { usersApi } from '../api/users';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/ui/Card';
@@ -107,12 +107,12 @@ export function Users() {
   const { user: currentUser, isAdmin } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteId,   setDeleteId]   = useState(null);
-
-  if (!isAdmin) return <Navigate to="/" replace />;
+  const [togglingId, setTogglingId] = useState(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: usersApi.getAll,
+    enabled: isAdmin,
   });
 
   const createMutation = useMutation({
@@ -128,6 +128,19 @@ export function Users() {
     },
   });
 
+  const statusMutation = useMutation({
+    mutationFn: ({ id, active }) => usersApi.setStatus(id, active),
+    onSuccess: (_, { active }) => {
+      qc.invalidateQueries({ queryKey: ['users'] });
+      setTogglingId(null);
+      toast.success(active ? 'User activated' : 'User deactivated');
+    },
+    onError: (err) => {
+      setTogglingId(null);
+      toast.error(err.response?.data?.message ?? 'Failed to update user status');
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: usersApi.delete,
     onSuccess: () => {
@@ -140,6 +153,8 @@ export function Users() {
       toast.error(msg);
     },
   });
+
+  if (!isAdmin) return <Navigate to="/" replace />;
 
   const deleteTarget = users.find(u => u.id === deleteId);
 
@@ -234,16 +249,24 @@ export function Users() {
                       </td>
 
                       <td className="px-5 py-4">
-                        {u.active ? (
+                        {isSelf ? (
                           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
                             style={{ color: '#047857', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }}>
-                            Active
+                            <Power className="w-3 h-3" />Active
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
-                            style={{ color: '#64748b', background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)' }}>
-                            Inactive
-                          </span>
+                          <button
+                            onClick={() => { setTogglingId(u.id); statusMutation.mutate({ id: u.id, active: !u.active }); }}
+                            disabled={togglingId === u.id || statusMutation.isPending}
+                            title={u.active ? 'Click to deactivate' : 'Click to activate'}
+                            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full transition-opacity hover:opacity-70 disabled:opacity-40 cursor-pointer"
+                            style={u.active
+                              ? { color: '#047857', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }
+                              : { color: '#64748b', background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)' }
+                            }
+                          >
+                            {u.active ? <><Power className="w-3 h-3" />Active</> : <><PowerOff className="w-3 h-3" />Inactive</>}
+                          </button>
                         )}
                       </td>
 
