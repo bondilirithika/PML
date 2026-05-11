@@ -16,7 +16,7 @@ const mainNav = [
 const monitorNav = [
   { to: '/tickets',    label: 'Tickets',       icon: Ticket },
   { to: '/thresholds', label: 'Thresholds',    icon: SlidersHorizontal, writeOnly: true },
-  { to: '/simulator',  label: 'IoT Simulator', icon: Radio,             writeOnly: true },
+  { to: '/simulator',  label: 'IoT Simulator', icon: Radio,             adminOnly: true },
 ];
 
 const adminNav = [
@@ -68,8 +68,8 @@ function NavItem({ to, label, icon: Icon, collapsed }) {
   );
 }
 
-function NavSection({ items, label, canWrite, collapsed }) {
-  const visible = items.filter(i => !i.writeOnly || canWrite);
+function NavSection({ items, label, canWrite, isAdmin, collapsed }) {
+  const visible = items.filter(i => (!i.writeOnly || canWrite) && (!i.adminOnly || isAdmin));
   if (!visible.length) return null;
 
   return (
@@ -159,7 +159,7 @@ export function Sidebar({ open }) {
           </div>
         )}
 
-        <NavSection items={monitorNav} label="Monitor" canWrite={canWrite} collapsed={collapsed} />
+        <NavSection items={monitorNav} label="Monitor" canWrite={canWrite} isAdmin={isAdmin} collapsed={collapsed} />
         {isAdmin && <NavSection items={adminNav} label="Admin" collapsed={collapsed} />}
       </nav>
 

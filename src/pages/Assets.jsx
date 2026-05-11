@@ -278,7 +278,7 @@ function EditAssetForm({ onSubmit, defaultValues, loading }) {
 
 export function Assets() {
   const qc = useQueryClient();
-  const { canWrite, canDelete } = useAuth();
+  const { canCreate, canWrite, canDelete } = useAuth();
   const { state: locationState } = useLocation();
   const [violationsOnly, setViolationsOnly] = useState(locationState?.violationsOnly ?? false);
 
@@ -471,7 +471,7 @@ export function Assets() {
                 <X className="w-3 h-3" /> Violations only
               </button>
             )}
-            {canWrite && <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>New Asset</Button>}
+            {canCreate && <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>New Asset</Button>}
           </div>
         }
       />
@@ -484,7 +484,7 @@ export function Assets() {
             icon={<Server className="w-7 h-7" />}
             title={violationsOnly ? 'No violated assets' : 'No assets yet'}
             description={violationsOnly ? 'No threshold breaches in the last 24 hours' : 'Add your first piece of equipment to start monitoring'}
-            action={canWrite && !violationsOnly ? <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Asset</Button> : undefined}
+            action={canCreate && !violationsOnly ? <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Asset</Button> : undefined}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -666,7 +666,7 @@ export function Assets() {
               </div>
               <p className="text-sm font-semibold text-slate-500">No sensors yet</p>
               <p className="text-xs text-slate-400 mt-1">
-                {canWrite ? 'Add the first sensor for this asset below.' : 'No sensors have been registered for this asset.'}
+                {canCreate ? 'Add the first sensor for this asset below.' : 'No sensors have been registered for this asset.'}
               </p>
             </div>
           ) : (
@@ -779,7 +779,7 @@ export function Assets() {
             </div>
           )}
 
-          {canWrite && !showSensorForm && (
+          {canCreate && !showSensorForm && (
             <button
               onClick={() => { setEditingSensor(null); setShowSensorForm(true); }}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-all duration-150"

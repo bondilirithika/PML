@@ -112,17 +112,22 @@ export function Dashboard() {
   const { data: avgRms, isLoading: loadingAvgRms } = useQuery({
     queryKey: ['assets', 'avg-rms'],
     queryFn: assetsApi.getAvgRms,
+    refetchInterval: 15000,
+    staleTime: 0,
   });
 
+  // Backend returns one row per sensor per asset. We take the MAX sensor avg-RMS per asset
+  // rather than averaging the averages (which would be unweighted and could hide a bad sensor).
   const chartData = (() => {
     if (!avgRms) return [];
     const map = {};
     avgRms.forEach(row => {
-      if (!map[row.assetName]) map[row.assetName] = { asset: row.assetName, avgRms: 0, count: 0 };
-      map[row.assetName].avgRms += row.averageRms;
-      map[row.assetName].count  += 1;
+      if (!map[row.assetName]) map[row.assetName] = { asset: row.assetName, avgRms: 0 };
+      if (row.averageRms > map[row.assetName].avgRms) {
+        map[row.assetName].avgRms = row.averageRms;
+      }
     });
-    return Object.values(map).map(r => ({ asset: r.asset, avgRms: +(r.avgRms / r.count).toFixed(2) }));
+    return Object.values(map).map(r => ({ asset: r.asset, avgRms: +r.avgRms.toFixed(2) }));
   })();
 
   const activeSensors = sensors?.filter(s => s.active).length ?? 0;
@@ -183,8 +188,8 @@ export function Dashboard() {
         <div className="xl:col-span-3">
           <Card>
             <CardHeader
-              title="Average RMS per Asset"
-              subtitle="Last 30 days — vibration intensity (mm/s)"
+              title="Peak Avg RMS per Asset"
+              subtitle="Last 30 days — highest sensor avg per asset (mm/s)"
               action={
                 <div
                   className="w-8 h-8 rounded-xl flex items-center justify-center"

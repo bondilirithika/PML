@@ -47,6 +47,7 @@ export function AuthProvider({ children }) {
   const isAdmin      = user?.role === 'ROLE_ADMIN';
   const isManager    = user?.role === 'ROLE_MANAGER';
   const isTechnician = user?.role === 'ROLE_TECHNICIAN';
+  const canCreate    = isAdmin;
   const canWrite     = isAdmin || isManager;
   const canDelete    = isAdmin;
 
@@ -54,7 +55,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider value={{
       user,
       isAuthenticated: !!user,
-      isAdmin, isManager, isTechnician, canWrite, canDelete,
+      isAdmin, isManager, isTechnician, canCreate, canWrite, canDelete,
       login, logout, loading,
     }}>
       {children}

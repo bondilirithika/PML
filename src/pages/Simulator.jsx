@@ -83,7 +83,7 @@ function ResultCard({ reading }) {
 }
 
 export function Simulator() {
-  const { canWrite } = useAuth();
+  const { canCreate } = useAuth();
   const qc = useQueryClient();
   const [lastReading, setLastReading] = useState(null);
   const [selectedSensor, setSelectedSensor] = useState(null);
@@ -128,7 +128,7 @@ export function Simulator() {
   const willBreach  = (rmsLimit != null && currentRms > rmsLimit) || (tempLimit != null && currentTemp > tempLimit);
   const hasValues   = currentRms > 0 || currentTemp > 0;
 
-  if (!canWrite) {
+  if (!canCreate) {
     return (
       <div>
         <PageHeader
@@ -142,7 +142,7 @@ export function Simulator() {
           </div>
           <h3 className="text-xl font-black text-slate-900 mb-2">Access Restricted</h3>
           <p className="text-slate-500 text-sm text-center max-w-sm">
-            The IoT Simulator requires Manager or Admin privileges. Contact your administrator to request access.
+            The IoT Simulator requires Admin privileges. Contact your administrator to request access.
           </p>
         </div>
       </div>

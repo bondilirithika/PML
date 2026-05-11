@@ -62,7 +62,7 @@ function ThresholdForm({ onSubmit, defaultValues, loading, assets, isEdit }) {
 
 export function Thresholds() {
   const qc = useQueryClient();
-  const { canWrite, canDelete } = useAuth();
+  const { canCreate, canWrite, canDelete } = useAuth();
   const [createOpen, setCreateOpen]       = useState(false);
   const [editThreshold, setEditThreshold] = useState(null);
   const [deleteId, setDeleteId]           = useState(null);
@@ -109,7 +109,7 @@ export function Thresholds() {
         title="Thresholds"
         subtitle="Configure RMS and temperature alert limits per asset"
         action={
-          canWrite ? (
+          canCreate ? (
             <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
               New Threshold
             </Button>
@@ -125,7 +125,7 @@ export function Thresholds() {
             icon={<SlidersHorizontal className="w-7 h-7" />}
             title="No thresholds configured"
             description="Set RMS and temperature limits to auto-generate tickets on breaches"
-            action={canWrite ? <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Threshold</Button> : undefined}
+            action={canCreate ? <Button icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>Add Threshold</Button> : undefined}
           />
         ) : (
           <div className="overflow-x-auto">
