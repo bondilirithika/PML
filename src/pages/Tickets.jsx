@@ -33,7 +33,7 @@ function PriorityDot({ status }) {
 
 export function Tickets() {
   const qc = useQueryClient();
-  const { canWrite } = useAuth();
+  const { canWrite, canUpdateTicketStatus } = useAuth();
   const { state: locationState } = useLocation();
   const [page,         setPage]         = useState(0);
   const [statusFilter, setStatusFilter] = useState(locationState?.statusFilter ?? '');
@@ -191,7 +191,7 @@ export function Tickets() {
                         <td className="pl-6 pr-3 py-4">
                           <code className="text-[11px] font-bold px-2 py-0.5 rounded-lg"
                             style={{ color: '#6366f1', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                            #{ticket.id}
+                            {assetSelected ? idx + 1 : page * PAGE_SIZE + idx + 1}
                           </code>
                         </td>
                         <td className="px-3 py-4 overflow-hidden">
@@ -214,7 +214,7 @@ export function Tickets() {
                           <div className="text-[11px] text-slate-400 mt-0.5">{formatDate(ticket.createdAt)}</div>
                         </td>
                         <td className="px-3 py-4 pr-6">
-                          {canWrite && next.length > 0 ? (
+                          {canUpdateTicketStatus && next.length > 0 ? (
                             <select
                               disabled={updatingId === ticket.id || updateMutation.isPending}
                               onChange={e => {
@@ -239,7 +239,7 @@ export function Tickets() {
                           ) : (
                             <span className="text-[11px] font-bold px-2.5 py-1 rounded-full"
                               style={{ color: '#94a3b8', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.2)' }}>
-                              {canWrite ? 'Terminal' : '—'}
+                              {canUpdateTicketStatus ? 'Terminal' : '—'}
                             </span>
                           )}
                         </td>

@@ -47,15 +47,16 @@ export function AuthProvider({ children }) {
   const isAdmin      = user?.role === 'ROLE_ADMIN';
   const isManager    = user?.role === 'ROLE_MANAGER';
   const isTechnician = user?.role === 'ROLE_TECHNICIAN';
-  const canCreate    = isAdmin;
-  const canWrite     = isAdmin || isManager;
-  const canDelete    = isAdmin;
+  const canCreate              = isAdmin;
+  const canWrite               = isAdmin || isManager;
+  const canDelete              = isAdmin;
+  const canUpdateTicketStatus  = isAdmin || isManager || isTechnician;
 
   return (
     <AuthContext.Provider value={{
       user,
       isAuthenticated: !!user,
-      isAdmin, isManager, isTechnician, canCreate, canWrite, canDelete,
+      isAdmin, isManager, isTechnician, canCreate, canWrite, canDelete, canUpdateTicketStatus,
       login, logout, loading,
     }}>
       {children}

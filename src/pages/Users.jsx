@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus, Trash2, ShieldCheck, Users as UsersIcon, Crown, Wrench, Power, PowerOff } from 'lucide-react';
+import { Plus, Trash2, ShieldCheck, Users as UsersIcon, Crown, Wrench, Power, PowerOff, Eye, EyeOff } from 'lucide-react';
 import { usersApi } from '../api/users';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/ui/Card';
@@ -60,6 +60,7 @@ function AddUserForm({ onSubmit, loading }) {
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -77,13 +78,24 @@ function AddUserForm({ onSubmit, loading }) {
           placeholder="jsmith@company.com"
         />
       </div>
-      <Input
-        label="Password" required type="password"
-        error={errors.password?.message}
-        hint="Min 8 chars, uppercase, lowercase, number, special character"
-        {...register('password')}
-        placeholder="••••••••"
-      />
+      <div className="relative">
+        <Input
+          label="Password" required
+          type={showPassword ? 'text' : 'password'}
+          error={errors.password?.message}
+          hint="Min 8 chars, uppercase, lowercase, number, special character"
+          {...register('password')}
+          placeholder="••••••••"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(v => !v)}
+          className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors"
+          tabIndex={-1}
+        >
+          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+      </div>
       <Select
         label="Role" required
         error={errors.role?.message}
@@ -215,7 +227,7 @@ export function Users() {
                           className="text-[11px] font-bold px-2 py-0.5 rounded-lg"
                           style={{ color: '#6366f1', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}
                         >
-                          #{u.id}
+                          {idx + 1}
                         </code>
                       </td>
 

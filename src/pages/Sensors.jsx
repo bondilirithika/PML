@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, XCircle, Radio, Power, PowerOff, X } from 'lucide-react';
+import { CheckCircle2, XCircle, Radio, Power, PowerOff, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { sensorsApi } from '../api/sensors';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
 import { PageHeader } from '../components/ui/PageHeader';
 import { SkeletonTable } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -12,15 +13,21 @@ import { sensorTypeColors, sensorTypeLabel, sensorTypeStyle, formatDate } from '
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
+const PAGE_SIZE = 10;
+
 export function Sensors() {
   const qc = useQueryClient();
   const { canWrite } = useAuth();
   const { state: locationState } = useLocation();
   const [activeOnly, setActiveOnly] = useState(locationState?.activeOnly ?? false);
+  const [page, setPage] = useState(0);
 
   const { data: sensors, isLoading } = useQuery({ queryKey: ['sensors'], queryFn: sensorsApi.getAll });
 
-  const displayed = activeOnly ? (sensors ?? []).filter(s => s.active) : (sensors ?? []);
+  const filtered   = activeOnly ? (sensors ?? []).filter(s => s.active) : (sensors ?? []);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage   = Math.min(page, totalPages - 1);
+  const displayed  = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
 
   const statusMutation = useMutation({
     mutationFn: ({ id, active }) => sensorsApi.setStatus(id, active),
@@ -35,11 +42,11 @@ export function Sensors() {
     <>
       <PageHeader
         title="Sensors"
-        subtitle={`${displayed.length} ${activeOnly ? 'active' : 'total'} sensors across all assets`}
+        subtitle={`${filtered.length} ${activeOnly ? 'active' : 'total'} sensors across all assets`}
         action={
           activeOnly ? (
             <button
-              onClick={() => setActiveOnly(false)}
+              onClick={() => { setActiveOnly(false); setPage(0); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-colors"
               style={{ background: 'rgba(16,185,129,0.1)', color: '#047857', border: '1px solid rgba(16,185,129,0.25)' }}
             >
@@ -59,12 +66,13 @@ export function Sensors() {
             description={activeOnly ? 'All sensors are currently inactive' : 'Go to the Assets page and click on an asset\'s sensor count to add sensors'}
           />
         ) : (
+          <>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100"
                   style={{ background: 'linear-gradient(135deg, rgba(248,250,252,0.95), rgba(241,245,249,0.8))' }}>
-                  {['Sensor', 'Asset', 'Serial Number', 'Type', 'Status', 'Installed'].map(h => (
+                  {['#', 'Sensor', 'Asset', 'Serial Number', 'Type', 'Status', 'Installed'].map(h => (
                     <th key={h} className="sticky top-0 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest px-5 py-4 first:pl-6">{h}</th>
                   ))}
                 </tr>
@@ -76,6 +84,14 @@ export function Sensors() {
                     style={{ background: idx % 2 === 0 ? 'white' : 'rgba(248,250,252,0.5)' }}>
 
                     <td className="px-6 py-4">
+                      <code
+                        className="text-[11px] font-bold px-1.5 py-0.5 rounded-lg"
+                        style={{ color: '#10b981', background: 'rgba(16,185,129,0.08)' }}
+                      >
+                        {safePage * PAGE_SIZE + idx + 1}
+                      </code>
+                    </td>
+                    <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                           style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.15))', border: '1px solid rgba(16,185,129,0.15)' }}>
@@ -138,6 +154,37 @@ export function Sensors() {
               </tbody>
             </table>
           </div>
+
+          {totalPages > 1 && (
+            <div
+              className="px-6 py-4 border-t border-slate-100 flex items-center justify-between"
+              style={{ background: 'rgba(248,250,252,0.6)' }}
+            >
+              <p className="text-xs text-slate-500 font-medium">
+                Page <span className="font-bold text-slate-700">{safePage + 1}</span> of {totalPages}
+                &ensp;·&ensp;
+                <span className="font-bold text-slate-700">{filtered.length}</span> sensors total
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary" size="sm"
+                  disabled={safePage === 0}
+                  onClick={() => setPage(p => p - 1)}
+                  icon={<ChevronLeft className="w-3.5 h-3.5" />}
+                >
+                  Prev
+                </Button>
+                <Button
+                  variant="secondary" size="sm"
+                  disabled={safePage >= totalPages - 1}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  Next <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </Card>
     </>

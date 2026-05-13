@@ -129,7 +129,7 @@ function CreateAssetForm({ onSubmit, loading }) {
   const [pendingSensors,  setPendingSensors]  = useState([]);
   const [showSensorAdd,   setShowSensorAdd]   = useState(false);
   const [draft,           setDraft]           = useState({ name: '', serialNumber: '', sensorType: '' });
-  const [draftError,      setDraftError]      = useState('');
+  const [draftErrors,     setDraftErrors]     = useState({});
   const [sensorListError, setSensorListError] = useState('');
 
   function addSensor() {
@@ -139,12 +139,17 @@ function CreateAssetForm({ onSubmit, loading }) {
       sensorType:   draft.sensorType,
     });
     if (!result.success) {
-      setDraftError(result.error.errors[0].message);
+      const errs = {};
+      result.error.errors.forEach(e => {
+        const field = e.path[0];
+        if (field && !errs[field]) errs[field] = e.message;
+      });
+      setDraftErrors(errs);
       return;
     }
     setPendingSensors(prev => [...prev, result.data]);
     setDraft({ name: '', serialNumber: '', sensorType: '' });
-    setDraftError('');
+    setDraftErrors({});
     setSensorListError('');
     setShowSensorAdd(false);
   }
@@ -207,16 +212,19 @@ function CreateAssetForm({ onSubmit, loading }) {
             style={{ background: 'rgba(248,250,252,0.8)', border: '1px solid rgba(226,232,240,0.8)' }}>
             <div className="grid grid-cols-2 gap-2.5">
               <Input label="Sensor Name" required value={draft.name}
-                onChange={e => { setDraft(d => ({ ...d, name: e.target.value })); setDraftError(''); }}
+                error={draftErrors.name}
+                onChange={e => { setDraft(d => ({ ...d, name: e.target.value })); setDraftErrors(p => ({ ...p, name: undefined })); }}
                 placeholder="e.g. Vibration A" />
               <Input label="Serial Number" required value={draft.serialNumber}
-                onChange={e => { setDraft(d => ({ ...d, serialNumber: e.target.value })); setDraftError(''); }}
+                error={draftErrors.serialNumber}
+                onChange={e => { setDraft(d => ({ ...d, serialNumber: e.target.value })); setDraftErrors(p => ({ ...p, serialNumber: undefined })); }}
                 placeholder="SN-PUMP01-VIB" />
             </div>
             <Select
               label="Sensor Type" required
+              error={draftErrors.sensorType}
               value={draft.sensorType}
-              onChange={e => { setDraft(d => ({ ...d, sensorType: e.target.value })); setDraftError(''); }}
+              onChange={e => { setDraft(d => ({ ...d, sensorType: e.target.value })); setDraftErrors(p => ({ ...p, sensorType: undefined })); }}
               placeholder="Select type…"
               options={[
                 { value: 'VIBRATION',   label: 'Vibration' },
@@ -224,9 +232,8 @@ function CreateAssetForm({ onSubmit, loading }) {
                 { value: 'COMBINED',    label: 'Combined (RMS + Temp)' },
               ]}
             />
-            {draftError && <p className="text-xs text-red-500 font-medium">{draftError}</p>}
             <div className="flex gap-2">
-              <button type="button" onClick={() => { setShowSensorAdd(false); setDraftError(''); }}
+              <button type="button" onClick={() => { setShowSensorAdd(false); setDraftErrors({}); }}
                 className="flex-1 py-1.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-100 border border-slate-200 transition-colors">
                 Cancel
               </button>
@@ -238,7 +245,7 @@ function CreateAssetForm({ onSubmit, loading }) {
             </div>
           </div>
         ) : (
-          <button type="button" onClick={() => setShowSensorAdd(true)}
+          <button type="button" onClick={() => { setShowSensorAdd(true); setDraftErrors({}); }}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-all duration-150"
             style={{ background: 'rgba(16,185,129,0.06)', border: '1px dashed rgba(16,185,129,0.35)' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.1)'; }}

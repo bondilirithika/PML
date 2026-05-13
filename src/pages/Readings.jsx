@@ -374,7 +374,7 @@ export function Readings() {
                                 className="text-[11px] font-bold px-1.5 py-0.5 rounded-lg"
                                 style={{ color: '#6366f1', background: 'rgba(99,102,241,0.08)' }}
                               >
-                                #{r.id}
+                                {page * 50 + idx + 1}
                               </code>
                             </td>
                             <td className="px-5 py-3.5 text-slate-700 whitespace-nowrap text-[12px] font-medium">{formatDate(r.timestamp)}</td>
