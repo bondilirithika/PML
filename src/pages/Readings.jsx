@@ -63,11 +63,12 @@ export function Readings() {
       readingsApi.getPage({
         sensorId: sensorId,
         from: from ? `${from}:00` : undefined,
-        to:   to   ? `${to}:00`   : undefined,
+        to:   to   ? `${to}:00`   : format(endOfDay(new Date()), "yyyy-MM-dd'T'HH:mm:ss"),
         page,
         size: 50,
       }),
     enabled: !!sensorId,
+    refetchInterval: 5000,
   });
 
   const readings   = data?.content ?? [];

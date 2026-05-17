@@ -188,8 +188,8 @@ export function Dashboard() {
         <div className="xl:col-span-3">
           <Card>
             <CardHeader
-              title="Peak Avg RMS per Asset"
-              subtitle="Last 30 days — highest sensor avg per asset (mm/s)"
+              title="Avg RMS per Asset"
+              subtitle="Last 30 days"
               action={
                 <div
                   className="w-8 h-8 rounded-xl flex items-center justify-center"
